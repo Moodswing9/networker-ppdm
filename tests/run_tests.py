@@ -44,8 +44,9 @@ TESTS_FILE = Path(__file__).parent / "test_cases.yaml"
 # ── Config ─────────────────────────────────────────────────────────────────
 MODEL = "claude-haiku-4-5-20251001"   # fast + cheap for test validation
 MAX_TOKENS = 2048
-RETRY_ATTEMPTS = 3
-RETRY_DELAY = 5   # seconds between retries on rate limit
+RETRY_ATTEMPTS = 4
+RETRY_DELAY = 65  # seconds to wait after a rate limit hit (limit resets per minute)
+REQUEST_DELAY = 2 # seconds between every request (pacing to stay under TPM limit)
 
 # ── ANSI colours ───────────────────────────────────────────────────────────
 GREEN  = "\033[92m"
@@ -73,28 +74,49 @@ def load_tests() -> list[dict]:
     return data.get("tests", [])
 
 
-def build_system_prompt(skill_content: str) -> str:
-    return f"""You are an expert assistant with deep knowledge of Dell EMC NetWorker and PowerProtect Data Manager (PPDM). The following is your knowledge base — use it to answer questions accurately and completely.
+def build_system_blocks(skill_content: str) -> list:
+    """Return system prompt as a list of content blocks with prompt caching enabled.
 
-{skill_content}
+    Caching the large SKILL.md block (≈32k tokens) means subsequent requests
+    count those tokens at ~1/10th the normal input-token rate, keeping us well
+    under the 50k tokens-per-minute org limit even when running many tests.
+    """
+    return [
+        {
+            "type": "text",
+            "text": (
+                "You are an expert assistant with deep knowledge of Dell EMC NetWorker "
+                "and PowerProtect Data Manager (PPDM). The following is your knowledge "
+                "base — use it to answer questions accurately and completely.\n\n"
+                + skill_content
+                + "\n\nWhen answering questions:\n"
+                "- Be specific and include exact API endpoints, CLI commands, and code "
+                "examples from the knowledge base\n"
+                "- Include relevant port numbers, authentication methods, and request bodies\n"
+                "- Do not say \"I don't know\" — use the knowledge base to provide a complete answer"
+            ),
+            "cache_control": {"type": "ephemeral"},  # cache for up to 5 minutes
+        }
+    ]
 
-When answering questions:
-- Be specific and include exact API endpoints, CLI commands, and code examples from the knowledge base
-- Include relevant port numbers, authentication methods, and request bodies
-- Do not say "I don't know" — use the knowledge base to provide a complete answer
-"""
 
-
-def ask_claude(client: anthropic.Anthropic, system: str, prompt: str) -> str:
+def ask_claude(client: anthropic.Anthropic, system_blocks: list, prompt: str) -> tuple[str, dict]:
+    """Send prompt to Claude and return (response_text, usage_dict)."""
     for attempt in range(1, RETRY_ATTEMPTS + 1):
         try:
             message = client.messages.create(
                 model=MODEL,
                 max_tokens=MAX_TOKENS,
-                system=system,
+                system=system_blocks,
                 messages=[{"role": "user", "content": prompt}],
             )
-            return message.content[0].text
+            usage = {
+                "input_tokens":          message.usage.input_tokens,
+                "output_tokens":         message.usage.output_tokens,
+                "cache_creation_tokens": getattr(message.usage, "cache_creation_input_tokens", 0),
+                "cache_read_tokens":     getattr(message.usage, "cache_read_input_tokens", 0),
+            }
+            return message.content[0].text, usage
         except anthropic.RateLimitError:
             if attempt < RETRY_ATTEMPTS:
                 print(f"    {YELLOW}Rate limited — waiting {RETRY_DELAY}s (attempt {attempt}/{RETRY_ATTEMPTS}){RESET}")
@@ -109,7 +131,7 @@ def ask_claude(client: anthropic.Anthropic, system: str, prompt: str) -> str:
                 raise
 
 
-def run_test(client: anthropic.Anthropic, system: str, test: dict, verbose: bool) -> dict:
+def run_test(client: anthropic.Anthropic, system_blocks: list, test: dict, verbose: bool) -> dict:
     test_id       = test["id"]
     category      = test.get("category", "Uncategorized")
     section       = test.get("section", "")
@@ -123,13 +145,13 @@ def run_test(client: anthropic.Anthropic, system: str, test: dict, verbose: bool
     ])
 
     try:
-        response = ask_claude(client, system, prompt)
+        response, usage = ask_claude(client, system_blocks, prompt)
     except Exception as e:
         return {
             "id": test_id, "category": category, "section": section,
             "passed": False, "error": str(e),
             "failed_assertions": [], "failed_neg_assertions": [],
-            "response": "",
+            "response": "", "usage": {},
         }
 
     response_lower = response.lower()
@@ -148,12 +170,17 @@ def run_test(client: anthropic.Anthropic, system: str, test: dict, verbose: bool
         "failed_assertions": failed,
         "failed_neg_assertions": failed_neg,
         "response": response,
+        "usage": usage,
         "error": None,
     }
 
+    # Show cache hit/miss indicator
+    cache_read = usage.get("cache_read_tokens", 0)
+    cache_tag  = f" {CYAN}[cache hit]{RESET}" if cache_read > 0 else f" {YELLOW}[cache miss]{RESET}"
+
     # Print result line
     status = TICK if passed else CROSS
-    print(f"  {status} [{test_id}] {prompt[:70]}{'...' if len(prompt) > 70 else ''}")
+    print(f"  {status} [{test_id}] {prompt[:65]}{'...' if len(prompt) > 65 else ''}{cache_tag}")
 
     if not passed:
         if failed:
@@ -214,6 +241,19 @@ def print_summary(results: list[dict], elapsed: float):
         icon = TICK if counts["fail"] == 0 else CROSS
         print(f"  {icon} {cat:<35} {counts['pass']}/{total_cat}")
 
+    # Token usage summary
+    total_input   = sum(r.get("usage", {}).get("input_tokens", 0)          for r in results)
+    total_output  = sum(r.get("usage", {}).get("output_tokens", 0)         for r in results)
+    total_created = sum(r.get("usage", {}).get("cache_creation_tokens", 0) for r in results)
+    total_cached  = sum(r.get("usage", {}).get("cache_read_tokens", 0)     for r in results)
+
+    if total_input or total_cached:
+        print(f"\n  {BOLD}Token usage:{RESET}")
+        print(f"    Input         : {total_input:,}")
+        print(f"    Output        : {total_output:,}")
+        print(f"    Cache writes  : {total_created:,}")
+        print(f"    Cache reads   : {total_cached:,}  {CYAN}(≈1/10th rate){RESET}")
+
     print()
     if pct == 100.0:
         print(f"{BOLD}{GREEN}All tests passed!{RESET}")
@@ -260,9 +300,9 @@ def main():
     print(f"Skill  : {SKILL_FILE}")
     print(f"Tests  : {TESTS_FILE}")
 
-    skill_content = load_skill()
-    all_tests     = load_tests()
-    system        = build_system_prompt(skill_content)
+    skill_content  = load_skill()
+    all_tests      = load_tests()
+    system_blocks  = build_system_blocks(skill_content)
 
     # ── Filter ──────────────────────────────────────────────────────────────
     tests = all_tests
@@ -275,21 +315,28 @@ def main():
         if not tests:
             sys.exit(f"ERROR: No tests found in category '{args.category}'")
 
-    print(f"Running: {len(tests)} test(s)\n")
+    print(f"Running: {len(tests)} test(s)")
+    print(f"Caching: enabled — SKILL.md cached after first request (≈1/10th token rate)\n")
 
     # ── Group by category for display ───────────────────────────────────────
     current_category = None
     results = []
     start_time = time.time()
 
-    for test in tests:
+    for i, test in enumerate(tests):
         cat = test.get("category", "Uncategorized")
         if cat != current_category:
             current_category = cat
             print(f"\n{BOLD}{CYAN}{cat}{RESET}")
 
-        result = run_test(client, system, test, args.verbose)
+        result = run_test(client, system_blocks, test, args.verbose)
         results.append(result)
+
+        # Pace requests to stay under the tokens-per-minute rate limit.
+        # After the first request the system prompt is cached, so subsequent
+        # requests cost far fewer tokens — but we still add a small gap.
+        if i < len(tests) - 1:
+            time.sleep(REQUEST_DELAY)
 
         if args.fail_fast and not result["passed"]:
             print(f"\n{RED}Stopping on first failure (--fail-fast){RESET}")
