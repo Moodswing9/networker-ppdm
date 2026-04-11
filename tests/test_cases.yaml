@@ -1,0 +1,1284 @@
+---
+# networker-ppdm skill test suite
+# Each test case sends a prompt with the skill injected and validates the response
+# contains all required assertions (case-insensitive substring match)
+
+tests:
+
+  # ── PPDM CORE ─────────────────────────────────────────────────────────────
+
+  - id: ppdm_auth
+    category: PPDM Core
+    section: PPDM REST API
+    prompt: "How do I authenticate to the PPDM REST API and use the token in subsequent requests?"
+    assertions:
+      - "8443"
+      - "/api/v2/login"
+      - "access_token"
+      - "Bearer"
+      - "Authorization"
+
+  - id: ppdm_list_assets
+    category: PPDM Core
+    section: PPDM REST API
+    prompt: "Show me the PPDM REST API call to list all assets and filter by asset type."
+    assertions:
+      - "/api/v2/assets"
+      - "filter"
+      - "type eq"
+      - "Authorization"
+
+  - id: ppdm_list_activities
+    category: PPDM Core
+    section: PPDM REST API
+    prompt: "How do I retrieve all failed backup activities from the PPDM REST API?"
+    assertions:
+      - "/api/v2/activities"
+      - "FAILED"
+      - "filter"
+      - "state"
+
+  - id: ppdm_restore
+    category: PPDM Core
+    section: PPDM REST API
+    prompt: "What is the PPDM REST API endpoint to initiate a restore and what body does it require?"
+    assertions:
+      - "/api/v2/restores"
+      - "copyId"
+      - "restoreType"
+      - "POST"
+
+  - id: ppdm_python_client
+    category: PPDM Core
+    section: Python Automation Library
+    prompt: "Show me a reusable Python class for the PPDM API that handles authentication and listing failed activities."
+    assertions:
+      - "class PPDMClient"
+      - "access_token"
+      - "Bearer"
+      - "failed"
+      - "requests"
+
+  - id: ppdm_powershell
+    category: PPDM Core
+    section: PowerShell Snippet
+    prompt: "How do I trigger an on-demand PPDM backup using PowerShell?"
+    assertions:
+      - "Invoke-RestMethod"
+      - "Bearer"
+      - "protection-policies"
+      - "token"
+
+  # ── PPDM PROTECTION POLICIES ──────────────────────────────────────────────
+
+  - id: ppdm_create_policy
+    category: PPDM Policies
+    section: PPDM REST API
+    prompt: "How do I create a PPDM protection policy via REST API? Show the full JSON body."
+    assertions:
+      - "protection-policies"
+      - "assetType"
+      - "stages"
+      - "retention"
+      - "schedule"
+      - "POST"
+
+  - id: ppdm_protection_rules
+    category: PPDM Policies
+    section: PPDM REST API
+    prompt: "How do I create a PPDM protection rule that automatically assigns assets to a policy?"
+    assertions:
+      - "protection-rules"
+      - "conditions"
+      - "MOVE_TO_POLICY"
+      - "assetType"
+      - "priority"
+
+  # ── PPDM CREDENTIALS ──────────────────────────────────────────────────────
+
+  - id: ppdm_credentials_crud
+    category: PPDM Credentials
+    section: Credentials API
+    prompt: "Show me how to create, test, update and delete credentials in PPDM using the REST API."
+    assertions:
+      - "/api/v2/credentials"
+      - "POST"
+      - "PATCH"
+      - "DELETE"
+      - "test"
+      - "username"
+      - "password"
+
+  # ── PPDM SLA & COMPLIANCE ─────────────────────────────────────────────────
+
+  - id: ppdm_sla_compliance
+    category: PPDM SLA
+    section: SLA and Compliance API
+    prompt: "How do I check SLA compliance in PPDM and list all non-compliant assets via REST?"
+    assertions:
+      - "/api/v2/slas"
+      - "compliance"
+      - "NON_COMPLIANT"
+      - "rpoInSeconds"
+
+  - id: ppdm_create_sla
+    category: PPDM SLA
+    section: SLA and Compliance API
+    prompt: "How do I create a custom SLA with a 4-hour RPO in PPDM and assign it to a policy?"
+    assertions:
+      - "rpoInSeconds"
+      - "14400"
+      - "protection-policies"
+      - "slaId"
+
+  # ── PPDM ALERTS ───────────────────────────────────────────────────────────
+
+  - id: ppdm_alerts
+    category: PPDM Alerts
+    section: Alerts and Events API
+    prompt: "How do I list critical unacknowledged alerts and acknowledge them in bulk using PPDM REST API?"
+    assertions:
+      - "/api/v2/alerts"
+      - "CRITICAL"
+      - "UNACKNOWLEDGED"
+      - "ACKNOWLEDGED"
+      - "bulk"
+
+  - id: ppdm_smtp
+    category: PPDM Alerts
+    section: Alerts and Events API
+    prompt: "How do I configure SMTP email notifications for PPDM alerts via REST API?"
+    assertions:
+      - "smtp"
+      - "email"
+      - "recipients"
+      - "severity"
+      - "notification"
+
+  - id: ppdm_audit_logs
+    category: PPDM Alerts
+    section: Alerts and Events API
+    prompt: "How do I retrieve audit logs showing user actions and policy changes in PPDM?"
+    assertions:
+      - "audit"
+      - "user"
+      - "action"
+      - "timestamp"
+
+  # ── PPDM HEALTH & CERTS ───────────────────────────────────────────────────
+
+  - id: ppdm_health
+    category: PPDM System
+    section: System Health and Certificates API
+    prompt: "How do I check PPDM component health and manage certificates via the REST API?"
+    assertions:
+      - "components"
+      - "certificates"
+      - "status"
+      - "notAfter"
+      - "licenses"
+
+  # ── PPDM USERS & RBAC ─────────────────────────────────────────────────────
+
+  - id: ppdm_create_user
+    category: PPDM RBAC
+    section: PPDM Users and RBAC API
+    prompt: "How do I create a new PPDM user with the Backup Administrator role using the REST API?"
+    assertions:
+      - "/api/v2/users"
+      - "ROLE_BACKUP_ADMINISTRATOR"
+      - "roleId"
+      - "enabled"
+      - "POST"
+
+  - id: ppdm_roles_list
+    category: PPDM RBAC
+    section: PPDM Users and RBAC API
+    prompt: "What built-in roles does PPDM have and how do I list them via REST?"
+    assertions:
+      - "ROLE_ADMIN"
+      - "ROLE_BACKUP_ADMINISTRATOR"
+      - "ROLE_RESTORE_ADMINISTRATOR"
+      - "ROLE_USER"
+      - "/api/v2/roles"
+
+  - id: ppdm_sessions
+    category: PPDM RBAC
+    section: PPDM Users and RBAC API
+    prompt: "How do I list active PPDM sessions and force logout a specific user?"
+    assertions:
+      - "/api/v2/sessions"
+      - "loginTime"
+      - "sourceIp"
+      - "DELETE"
+
+  # ── PPDM LDAP/AD ──────────────────────────────────────────────────────────
+
+  - id: ppdm_ldap_configure
+    category: PPDM LDAP
+    section: PPDM LDAP / Active Directory Integration API
+    prompt: "How do I configure Active Directory integration in PPDM and map an AD group to a role?"
+    assertions:
+      - "ldap-providers"
+      - "ACTIVE_DIRECTORY"
+      - "baseDn"
+      - "bindDn"
+      - "group-mappings"
+      - "roleId"
+
+  - id: ppdm_ldap_test
+    category: PPDM LDAP
+    section: PPDM LDAP / Active Directory Integration API
+    prompt: "How do I test LDAP connectivity in PPDM after configuring a provider?"
+    assertions:
+      - "test"
+      - "status"
+      - "message"
+      - "ldap"
+
+  # ── PPDM APP HOST & AGENTS ────────────────────────────────────────────────
+
+  - id: ppdm_register_host
+    category: PPDM App Host
+    section: PPDM App Host and Agent Registration API
+    prompt: "What are the steps to register an application host in PPDM before protecting a database?"
+    assertions:
+      - "credentials"
+      - "inventory-sources"
+      - "HOST"
+      - "discover"
+      - "agentStatus"
+
+  - id: ppdm_agent_types
+    category: PPDM App Host
+    section: PPDM App Host and Agent Registration API
+    prompt: "What agent types does PPDM support and which one is used for Oracle databases?"
+    assertions:
+      - "ORACLE_AGENT"
+      - "MSSQL_AGENT"
+      - "SAPHANA_AGENT"
+      - "FS_AGENT"
+
+  # ── PPDM DATABASE PROTECTION ──────────────────────────────────────────────
+
+  - id: ppdm_oracle_policy
+    category: PPDM Database
+    section: PPDM Database Protection API
+    prompt: "How do I create a PPDM protection policy for Oracle databases with RMAN and enable archive log backups?"
+    assertions:
+      - "ORACLE"
+      - "rmanChannels"
+      - "ARCHIVELOG"
+      - "archiveLogRetentionHours"
+      - "APPLICATION_CONSISTENT"
+
+  - id: ppdm_oracle_pit_restore
+    category: PPDM Database
+    section: PPDM Database Protection API
+    prompt: "How do I restore an Oracle database to a specific point in time using PPDM REST API?"
+    assertions:
+      - "restores"
+      - "oracle"
+      - "pointInTimeRecovery"
+      - "recoveryTime"
+      - "openDatabase"
+
+  - id: ppdm_mssql_policy
+    category: PPDM Database
+    section: PPDM Database Protection API
+    prompt: "How do I configure a PPDM protection policy for SQL Server with transaction log backups?"
+    assertions:
+      - "MICROSOFT_SQL_SERVER"
+      - "enableLogBackup"
+      - "logBackupIntervalMinutes"
+      - "APPLICATION_CONSISTENT"
+
+  - id: ppdm_mssql_restore
+    category: PPDM Database
+    section: PPDM Database Protection API
+    prompt: "How do I restore a SQL Server database to an alternate instance with point-in-time recovery in PPDM?"
+    assertions:
+      - "targetInstance"
+      - "targetDatabase"
+      - "pointInTimeRecovery"
+      - "recoveryTime"
+      - "withRecovery"
+
+  - id: ppdm_hana_policy
+    category: PPDM Database
+    section: PPDM Database Protection API
+    prompt: "How do I protect a SAP HANA database with PPDM including log backup configuration?"
+    assertions:
+      - "SAP_HANA"
+      - "enableLogBackup"
+      - "logBackupIntervalMinutes"
+      - "backupPrefix"
+      - "SAPHANA"
+
+  # ── PPDM REPLICATION ──────────────────────────────────────────────────────
+
+  - id: ppdm_replication_multitier
+    category: PPDM Replication
+    section: PPDM Replication and Multi-Tier Copy API
+    prompt: "How do I create a 3-stage PPDM policy with local backup, replication to a remote DD, and cloud vault?"
+    assertions:
+      - "PROTECTION"
+      - "REPLICATION"
+      - "CLOUD_TIER"
+      - "sourceStageId"
+      - "protectionEngineId"
+
+  - id: ppdm_register_remote_ppdm
+    category: PPDM Replication
+    section: PPDM Replication and Multi-Tier Copy API
+    prompt: "How do I register a remote PPDM instance as a replication target?"
+    assertions:
+      - "protection-engines"
+      - "PPDM"
+      - "address"
+      - "credentials"
+
+  # ── PPDM CLOUD TIER ───────────────────────────────────────────────────────
+
+  - id: ppdm_cloud_tier_aws
+    category: PPDM Cloud
+    section: PPDM Cloud Tier API
+    prompt: "How do I register an AWS S3 bucket as a cloud tier target in PPDM?"
+    assertions:
+      - "cloud-targets"
+      - "AWS_S3"
+      - "bucketName"
+      - "accessKeyId"
+      - "secretAccessKey"
+      - "GLACIER"
+
+  - id: ppdm_cloud_tier_azure
+    category: PPDM Cloud
+    section: PPDM Cloud Tier API
+    prompt: "How do I configure Azure Blob Storage as a cloud tier target in PPDM?"
+    assertions:
+      - "AZURE_BLOB"
+      - "containerName"
+      - "accountName"
+      - "accountKey"
+
+  - id: ppdm_cloud_recall
+    category: PPDM Cloud
+    section: PPDM Cloud Tier API
+    prompt: "How do I recall (restore) data from a cloud tier back to Data Domain using PPDM?"
+    assertions:
+      - "cloud-recalls"
+      - "copyId"
+      - "storageSystemId"
+      - "recallId"
+
+  # ── PPDM COPIES MANAGEMENT ────────────────────────────────────────────────
+
+  - id: ppdm_retention_lock
+    category: PPDM Copies
+    section: PPDM Copies Management API
+    prompt: "How do I apply a retention lock to a PPDM backup copy to prevent deletion until a specific date?"
+    assertions:
+      - "retentionLock"
+      - "retentionLockExpiry"
+      - "PATCH"
+      - "copies"
+
+  - id: ppdm_legal_hold
+    category: PPDM Copies
+    section: PPDM Copies Management API
+    prompt: "How do I place a PPDM backup copy on legal hold and later release it?"
+    assertions:
+      - "legal-hold"
+      - "reason"
+      - "DELETE"
+      - "legalHold"
+
+  - id: ppdm_bulk_delete_copies
+    category: PPDM Copies
+    section: PPDM Copies Management API
+    prompt: "How do I bulk delete PPDM backup copies older than a specific date?"
+    assertions:
+      - "bulk-delete"
+      - "filter"
+      - "createTime"
+      - "deletedCount"
+
+  # ── PPDM NAS ──────────────────────────────────────────────────────────────
+
+  - id: ppdm_nas_isilon
+    category: PPDM NAS
+    section: PPDM NAS Protection API
+    prompt: "How do I register a Dell PowerScale (Isilon) NAS system in PPDM and create a protection policy?"
+    assertions:
+      - "POWERSCALE"
+      - "FILE_SYSTEM"
+      - "isilon"
+      - "inventory-sources"
+      - "discover"
+
+  - id: ppdm_nas_netapp
+    category: PPDM NAS
+    section: PPDM NAS Protection API
+    prompt: "How do I register a NetApp ONTAP system in PPDM for NAS file system protection?"
+    assertions:
+      - "NETAPP"
+      - "ontap"
+      - "FILE_SYSTEM"
+      - "inventory-sources"
+
+  - id: ppdm_nas_granular_restore
+    category: PPDM NAS
+    section: PPDM NAS Protection API
+    prompt: "How do I restore specific files and folders from a NAS backup in PPDM?"
+    assertions:
+      - "filePaths"
+      - "targetPath"
+      - "fileSystem"
+      - "restores"
+      - "overwriteExisting"
+
+  # ── PPDM VMWARE ───────────────────────────────────────────────────────────
+
+  - id: ppdm_vcenter_register
+    category: PPDM VMware
+    section: VMware Protection API
+    prompt: "How do I register a vCenter as an inventory source in PPDM and trigger VM discovery?"
+    assertions:
+      - "VCENTER"
+      - "inventory-sources"
+      - "discover"
+      - "VMWARE_VIRTUAL_MACHINE"
+      - "443"
+
+  - id: ppdm_instant_access
+    category: PPDM VMware
+    section: VMware Protection API
+    prompt: "How do I perform an instant access restore of a VM in PPDM to spin it up directly from the backup?"
+    assertions:
+      - "INSTANT_ACCESS"
+      - "powerOn"
+      - "targetDatastore"
+      - "targetVcenter"
+      - "restores"
+
+  # ── PPDM REPORTS ──────────────────────────────────────────────────────────
+
+  - id: ppdm_run_report
+    category: PPDM Reports
+    section: PPDM Reports API
+    prompt: "How do I run a PPDM SLA compliance report and export it as CSV via REST API?"
+    assertions:
+      - "report-templates"
+      - "reports"
+      - "templateId"
+      - "CSV"
+      - "export"
+
+  - id: ppdm_schedule_report
+    category: PPDM Reports
+    section: PPDM Reports API
+    prompt: "How do I schedule a recurring weekly report in PPDM that emails the results?"
+    assertions:
+      - "report-schedules"
+      - "WEEKLY"
+      - "recipients"
+      - "exportFormat"
+
+  # ── PPDM SYSTEM CONFIG ────────────────────────────────────────────────────
+
+  - id: ppdm_network_settings
+    category: PPDM System Config
+    section: PPDM System Configuration API
+    prompt: "How do I configure DNS and NTP servers on PPDM via the REST API?"
+    assertions:
+      - "network-settings"
+      - "dns"
+      - "ntp"
+      - "PATCH"
+      - "primary"
+
+  - id: ppdm_proxy_settings
+    category: PPDM System Config
+    section: PPDM System Configuration API
+    prompt: "How do I configure an outbound HTTP proxy in PPDM for cloud tier traffic?"
+    assertions:
+      - "proxy-settings"
+      - "host"
+      - "port"
+      - "noProxyHosts"
+
+  - id: ppdm_2fa
+    category: PPDM System Config
+    section: PPDM System Configuration API
+    prompt: "How do I enable two-factor authentication in PPDM and enroll a user?"
+    assertions:
+      - "mfa"
+      - "TOTP"
+      - "qrCodeUri"
+      - "enrollment"
+      - "enforcedForAllUsers"
+
+  - id: ppdm_token_management
+    category: PPDM System Config
+    section: PPDM System Configuration API
+    prompt: "How do I create a long-lived service account token in PPDM for automation pipelines and later revoke it?"
+    assertions:
+      - "tokens"
+      - "expiresInDays"
+      - "revoke"
+      - "DELETE"
+
+  # ── PPDM DIAGNOSTICS & UPGRADE ────────────────────────────────────────────
+
+  - id: ppdm_log_bundle
+    category: PPDM Diagnostics
+    section: PPDM System Diagnostics and Log Bundle API
+    prompt: "How do I generate and download a PPDM support log bundle via the REST API?"
+    assertions:
+      - "support-bundles"
+      - "includeSystemLogs"
+      - "download"
+      - "bundleId"
+
+  - id: ppdm_upgrade
+    category: PPDM Diagnostics
+    section: PPDM System Diagnostics and Log Bundle API
+    prompt: "Walk me through upgrading PPDM using the REST API including the precheck step."
+    assertions:
+      - "upgrade"
+      - "packages"
+      - "precheck"
+      - "start"
+      - "percentComplete"
+
+  # ── PPDM ASSET TAGS & VPROXY ─────────────────────────────────────────────
+
+  - id: ppdm_asset_tags
+    category: PPDM Tags
+    section: PPDM Asset Tags and vProxy Management API
+    prompt: "How do I create an asset tag in PPDM, assign it to assets, and build a protection rule based on it?"
+    assertions:
+      - "asset-tags"
+      - "key"
+      - "value"
+      - "assetIds"
+      - "protection-rules"
+      - "tags"
+
+  - id: ppdm_vproxy
+    category: PPDM vProxy
+    section: PPDM Asset Tags and vProxy Management API
+    prompt: "How do I deploy a new vSphere proxy (vProxy) in PPDM and tune the maximum concurrent sessions?"
+    assertions:
+      - "vproxies"
+      - "maxConcurrentSessions"
+      - "datastore"
+      - "network"
+      - "storageSystemId"
+
+  # ── PPDM DDBOOST ──────────────────────────────────────────────────────────
+
+  - id: ppdm_register_dd
+    category: PPDM DDBoost
+    section: DDBoost Configuration
+    prompt: "How do I register a Data Domain with DDBoost enabled as a storage system in PPDM via REST API?"
+    assertions:
+      - "storage-systems"
+      - "DATA_DOMAIN_SYSTEM"
+      - "enableDdBoost"
+      - "ddBoostUser"
+      - "storageUnit"
+      - "encryptionEnabled"
+
+  # ── KUBERNETES ────────────────────────────────────────────────────────────
+
+  - id: k8s_prerequisites
+    category: Kubernetes
+    section: Prerequisites
+    prompt: "What are the prerequisites before registering a Kubernetes cluster with PPDM for namespace protection?"
+    assertions:
+      - "CSI"
+      - "VolumeSnapshot"
+      - "1.21"
+      - "6443"
+      - "RBAC"
+      - "CDI"
+
+  - id: k8s_volumesnapshotclass
+    category: Kubernetes
+    section: Step 2 — Create a VolumeSnapshotClass
+    prompt: "How do I create a VolumeSnapshotClass for PPDM Kubernetes protection and which annotation sets it as default?"
+    assertions:
+      - "VolumeSnapshotClass"
+      - "is-default-class"
+      - "driver"
+      - "deletionPolicy"
+
+  - id: k8s_rbac
+    category: Kubernetes
+    section: Step 3 — Create PPDM ServiceAccount and RBAC
+    prompt: "What Kubernetes RBAC resources does PPDM need and how do I extract the ServiceAccount token?"
+    assertions:
+      - "ServiceAccount"
+      - "ClusterRoleBinding"
+      - "cluster-admin"
+      - "token"
+      - "base64"
+      - "powerprotect"
+
+  - id: k8s_register_cluster
+    category: Kubernetes
+    section: Step 4 — Register the Kubernetes Cluster in PPDM
+    prompt: "How do I register a Kubernetes cluster in PPDM using the REST API?"
+    assertions:
+      - "inventory-sources"
+      - "KUBERNETES"
+      - "6443"
+      - "token"
+      - "caCertificate"
+
+  - id: k8s_policy
+    category: Kubernetes
+    section: Step 6 — Create a Kubernetes Protection Policy
+    prompt: "How do I create a Kubernetes protection policy in PPDM via REST API?"
+    assertions:
+      - "protection-policies"
+      - "KUBERNETES"
+      - "CRASH_CONSISTENT"
+      - "retention"
+      - "storageSystemId"
+
+  - id: k8s_restore
+    category: Kubernetes
+    section: Step 9 — Restore a Kubernetes Namespace
+    prompt: "How do I restore a Kubernetes namespace to a new namespace in a different cluster using PPDM?"
+    assertions:
+      - "restores"
+      - "TO_NEW"
+      - "targetNamespace"
+      - "targetClusterId"
+      - "restorePVCs"
+
+  - id: k8s_troubleshoot
+    category: Kubernetes
+    section: Kubernetes Troubleshooting
+    prompt: "A PPDM Kubernetes backup fails with NO_SNAPSHOT_CLASS. What is the cause and fix?"
+    assertions:
+      - "VolumeSnapshotClass"
+      - "is-default-class"
+      - "annotation"
+      - "default"
+
+  # ── NETWORKER CORE ────────────────────────────────────────────────────────
+
+  - id: nw_mminfo
+    category: NetWorker Core
+    section: Core CLI Commands
+    prompt: "How do I use mminfo to query all savesets for a specific client from the last week?"
+    assertions:
+      - "mminfo"
+      - "-q"
+      - "client="
+      - "savetime"
+      - "-r"
+
+  - id: nw_nsradmin
+    category: NetWorker Core
+    section: nsradmin Quick Reference
+    prompt: "How do I use nsradmin to disable a NetWorker client and check its group membership?"
+    assertions:
+      - "nsradmin"
+      - "NSR client"
+      - "backup enabled"
+      - "No"
+      - "print"
+
+  - id: nw_recover
+    category: NetWorker Core
+    section: Core CLI Commands
+    prompt: "What are the CLI commands for interactive and scripted restore in NetWorker?"
+    assertions:
+      - "recover"
+      - "nsrrecover"
+      - "-c"
+      - "-t"
+      - "-s"
+
+  - id: nw_rest_api
+    category: NetWorker Core
+    section: NetWorker REST API
+    prompt: "What is the NetWorker REST API base URL, authentication method, and how do I start a backup?"
+    assertions:
+      - "9090"
+      - "nwrestapi/v3"
+      - "protectiongroups"
+      - "op/backup"
+      - "Basic"
+
+  # ── NETWORKER POLICY/WORKFLOW ─────────────────────────────────────────────
+
+  - id: nw_policy_hierarchy
+    category: NetWorker Policy
+    section: NetWorker Policy and Workflow API
+    prompt: "Explain the NetWorker 19+ policy hierarchy and how Policy, Workflow, and Action relate to each other."
+    assertions:
+      - "Policy"
+      - "Workflow"
+      - "Action"
+      - "schedule"
+      - "clientGroups"
+
+  - id: nw_create_workflow
+    category: NetWorker Policy
+    section: NetWorker Policy and Workflow API
+    prompt: "How do I create a NetWorker workflow with a daily full and incremental backup action via REST API?"
+    assertions:
+      - "workflows"
+      - "actions"
+      - "backup"
+      - "Full"
+      - "Incr"
+      - "schedule"
+
+  - id: nw_run_workflow
+    category: NetWorker Policy
+    section: NetWorker Policy and Workflow API
+    prompt: "How do I trigger a NetWorker workflow on-demand via the REST API?"
+    assertions:
+      - "op/start"
+      - "workflows"
+      - "policies"
+      - "POST"
+
+  # ── NETWORKER CLONE ───────────────────────────────────────────────────────
+
+  - id: nw_clone_rest
+    category: NetWorker Clone
+    section: NetWorker Clone API
+    prompt: "How do I clone specific NetWorker savesets to a DR pool using the REST API?"
+    assertions:
+      - "clones"
+      - "saveSetIds"
+      - "destinationPool"
+      - "retentionPeriod"
+      - "POST"
+
+  - id: nw_clone_cli
+    category: NetWorker Clone
+    section: NetWorker Clone API
+    prompt: "What is the CLI command to clone all savesets for a client from the last week to a tape pool?"
+    assertions:
+      - "nsrclone"
+      - "-c"
+      - "-t"
+      - "-b"
+      - "last week"
+
+  # ── NETWORKER DIRECTIVES & NOTIFICATIONS ──────────────────────────────────
+
+  - id: nw_directives
+    category: NetWorker Directives
+    section: NetWorker Directives and Notifications API
+    prompt: "How do I create a NetWorker directive to skip /tmp and compress /data, and assign it to a client?"
+    assertions:
+      - "directive"
+      - "skip"
+      - "compress"
+      - "NSR client"
+
+  - id: nw_notifications
+    category: NetWorker Notifications
+    section: NetWorker Directives and Notifications API
+    prompt: "How do I create a NetWorker notification to email the ops team when a backup fails?"
+    assertions:
+      - "notifications"
+      - "mail"
+      - "Savegroup"
+      - "Warning"
+      - "email"
+
+  # ── NETWORKER STORAGE/DEVICES/VOLUMES ─────────────────────────────────────
+
+  - id: nw_storage_node_create
+    category: NetWorker Storage
+    section: NetWorker Storage Node, Device and Volume Management REST API
+    prompt: "How do I add a new storage node to NetWorker via REST API?"
+    assertions:
+      - "storagenodes"
+      - "hostname"
+      - "targetSessions"
+      - "maxSessions"
+      - "POST"
+
+  - id: nw_device_crud
+    category: NetWorker Storage
+    section: NetWorker Storage Node, Device and Volume Management REST API
+    prompt: "How do I create, enable/disable and delete a NetWorker AFTD device via REST API?"
+    assertions:
+      - "devices"
+      - "AFTD"
+      - "mediaType"
+      - "file"
+      - "enabled"
+      - "DELETE"
+
+  - id: nw_volume_management
+    category: NetWorker Storage
+    section: NetWorker Storage Node, Device and Volume Management REST API
+    prompt: "How do I label a new volume, mount it, and expire it in NetWorker via REST and CLI?"
+    assertions:
+      - "volumes"
+      - "label"
+      - "mount"
+      - "unmount"
+      - "mminfo"
+      - "nsrmm"
+
+  # ── NETWORKER CLIENT PROPERTIES & LOCKBOX ────────────────────────────────
+
+  - id: nw_client_encryption
+    category: NetWorker Client
+    section: NetWorker Client Properties, Lockbox and Server Statistics API
+    prompt: "How do I enable AES 256 encryption on a NetWorker client and adjust its parallelism?"
+    assertions:
+      - "parallelism"
+      - "encryption"
+      - "aes 256"
+      - "PATCH"
+      - "clients"
+
+  - id: nw_lockbox
+    category: NetWorker Client
+    section: NetWorker Client Properties, Lockbox and Server Statistics API
+    prompt: "How do I refresh a stale lockbox entry for a NetWorker client after certificate rotation?"
+    assertions:
+      - "lockbox"
+      - "refresh"
+      - "nsrauth"
+      - "hostname"
+
+  - id: nw_server_stats
+    category: NetWorker Client
+    section: NetWorker Client Properties, Lockbox and Server Statistics API
+    prompt: "How do I check NetWorker server throughput, active sessions, and index size via REST API?"
+    assertions:
+      - "stats"
+      - "activeSessions"
+      - "throughput"
+      - "serverinfo"
+      - "indexSize"
+
+  # ── NETWORKER NDMP & BOOTSTRAP ────────────────────────────────────────────
+
+  - id: nw_ndmp
+    category: NetWorker NDMP
+    section: NetWorker NDMP and Bootstrap/Disaster Recovery
+    prompt: "How do I configure a NetApp NAS filer for NDMP backup in NetWorker?"
+    assertions:
+      - "NDMP"
+      - "backupType"
+      - "/vol/"
+      - "multistream"
+      - "nsradmin"
+
+  - id: nw_bootstrap
+    category: NetWorker Bootstrap
+    section: NetWorker NDMP and Bootstrap/Disaster Recovery
+    prompt: "How do I locate the NetWorker bootstrap saveset and use it to recover a NetWorker server after a disaster?"
+    assertions:
+      - "bootstrap"
+      - "mminfo"
+      - "scanner"
+      - "nsrrecover"
+      - "ssid"
+
+  # ── DDBOOST ───────────────────────────────────────────────────────────────
+
+  - id: dd_ddboost_enable
+    category: DDBoost
+    section: DDBoost Configuration
+    prompt: "How do I enable DDBoost on a Data Domain appliance via CLI and REST API?"
+    assertions:
+      - "ddboost"
+      - "enable"
+      - "storage-unit"
+      - "protocols/ddboost"
+      - "ddsh"
+
+  - id: dd_storage_unit_create
+    category: DDBoost
+    section: DDBoost Configuration
+    prompt: "How do I create a DDBoost storage unit with a quota using the Data Domain REST API?"
+    assertions:
+      - "storage-units"
+      - "quota"
+      - "soft-limit"
+      - "hard-limit"
+      - "TiB"
+      - "user"
+
+  - id: dd_ddboost_nw_device
+    category: DDBoost
+    section: DDBoost Configuration
+    prompt: "How do I add a DDBoost device to NetWorker via nsradmin?"
+    assertions:
+      - "nsradmin"
+      - "NSR device"
+      - "DDBoost"
+      - "Media type"
+      - "Data Domain"
+
+  - id: dd_port_reference
+    category: DDBoost
+    section: DDBoost Configuration
+    prompt: "What ports are required for DDBoost communication between clients and the Data Domain appliance?"
+    assertions:
+      - "2052"
+      - "3009"
+      - "TCP"
+
+  # ── DATA DOMAIN REST API ──────────────────────────────────────────────────
+
+  - id: dd_auth
+    category: Data Domain
+    section: Data Domain REST API — Full Reference
+    prompt: "How do I authenticate to the Data Domain REST API and what header is used for subsequent calls?"
+    assertions:
+      - "3009"
+      - "rest/v1.0"
+      - "auth"
+      - "X-DD-AUTH-TOKEN"
+      - "token"
+
+  - id: dd_filesystem_stats
+    category: Data Domain
+    section: Data Domain REST API — Full Reference
+    prompt: "How do I check Data Domain filesystem usage and capacity via REST API?"
+    assertions:
+      - "filesystems"
+      - "total-size"
+      - "used-size"
+      - "avail-size"
+      - "status"
+
+  - id: dd_replication
+    category: Data Domain
+    section: Data Domain REST API — Full Reference
+    prompt: "How do I list Data Domain replication contexts and trigger a sync via REST API?"
+    assertions:
+      - "replication"
+      - "contexts"
+      - "sync"
+      - "source"
+      - "destination"
+
+  - id: dd_filesystem_clean
+    category: Data Domain
+    section: Data Domain REST API — Full Reference
+    prompt: "How do I start a Data Domain filesystem clean operation and check its progress via REST?"
+    assertions:
+      - "clean"
+      - "bytes-freed"
+      - "POST"
+      - "filesystems"
+      - "status"
+
+  # ── DD VTL ────────────────────────────────────────────────────────────────
+
+  - id: dd_vtl_create_library
+    category: DD VTL
+    section: Data Domain VTL API
+    prompt: "How do I enable DD VTL and create a virtual tape library via REST API?"
+    assertions:
+      - "vtl"
+      - "libraries"
+      - "slots"
+      - "drives"
+      - "model"
+      - "enabled"
+
+  - id: dd_vtl_access_groups
+    category: DD VTL
+    section: Data Domain VTL API
+    prompt: "How do I create a VTL access group to allow a NetWorker storage node to access the library over Fibre Channel?"
+    assertions:
+      - "access-groups"
+      - "initiators"
+      - "wwpn"
+      - "devices"
+      - "library"
+
+  - id: dd_vtl_tapes
+    category: DD VTL
+    section: Data Domain VTL API
+    prompt: "How do I add virtual tape cartridges to a DD VTL library via REST API?"
+    assertions:
+      - "tapes"
+      - "barcode"
+      - "count"
+      - "capacity"
+
+  # ── DD CLOUD TIER ─────────────────────────────────────────────────────────
+
+  - id: dd_cloud_tier_profile
+    category: DD Cloud Tier
+    section: Data Domain Cloud Tier API
+    prompt: "How do I configure an AWS S3 cloud profile on Data Domain for cloud tiering?"
+    assertions:
+      - "cloud/profiles"
+      - "AWS"
+      - "bucket"
+      - "access-key"
+      - "secret-key"
+      - "storage-class"
+
+  - id: dd_cloud_tier_enable
+    category: DD Cloud Tier
+    section: Data Domain Cloud Tier API
+    prompt: "How do I enable cloud tier on a Data Domain storage unit and trigger an immediate tier job?"
+    assertions:
+      - "cloud-tier"
+      - "age-threshold-days"
+      - "profile-name"
+      - "enabled"
+      - "files-tiered"
+
+  - id: dd_cloud_recall
+    category: DD Cloud Tier
+    section: Data Domain Cloud Tier API
+    prompt: "How do I recall data from the Data Domain cloud tier back to active storage?"
+    assertions:
+      - "recall"
+      - "storage-unit"
+      - "file-path"
+      - "jobId"
+
+  # ── DD ENCRYPTION ─────────────────────────────────────────────────────────
+
+  - id: dd_encryption_enable
+    category: DD Encryption
+    section: Data Domain Encryption, User Management, SNMP and Syslog API
+    prompt: "How do I enable encryption at rest on Data Domain and integrate with an external KMIP key manager?"
+    assertions:
+      - "encryption"
+      - "AES256"
+      - "KMIP"
+      - "kmipServer"
+      - "kmipPort"
+      - "keyManagement"
+
+  - id: dd_encryption_key_rotate
+    category: DD Encryption
+    section: Data Domain Encryption, User Management, SNMP and Syslog API
+    prompt: "How do I list encryption keys and trigger a key rotation on Data Domain?"
+    assertions:
+      - "keys"
+      - "rotate"
+      - "tier"
+      - "lastRotated"
+
+  # ── DD USER MANAGEMENT ────────────────────────────────────────────────────
+
+  - id: dd_user_management
+    category: DD Users
+    section: Data Domain Encryption, User Management, SNMP and Syslog API
+    prompt: "What user roles does Data Domain support and how do I create and disable a user via REST API?"
+    assertions:
+      - "sysadmin"
+      - "backup-operator"
+      - "admin"
+      - "role"
+      - "enabled"
+      - "users"
+
+  # ── DD SNMP & SYSLOG ──────────────────────────────────────────────────────
+
+  - id: dd_snmp
+    category: DD SNMP
+    section: Data Domain Encryption, User Management, SNMP and Syslog API
+    prompt: "How do I configure SNMPv3 on Data Domain with authentication and privacy protocols?"
+    assertions:
+      - "snmp"
+      - "v3"
+      - "SHA"
+      - "AES128"
+      - "trap-hosts"
+      - "auth-password"
+
+  - id: dd_syslog
+    category: DD Syslog
+    section: Data Domain Encryption, User Management, SNMP and Syslog API
+    prompt: "How do I configure Data Domain to send syslog messages to a SIEM system?"
+    assertions:
+      - "syslog"
+      - "host"
+      - "port"
+      - "514"
+      - "UDP"
+      - "facility"
+
+  # ── DD NFS/CIFS ───────────────────────────────────────────────────────────
+
+  - id: dd_nfs_export
+    category: DD NFS
+    section: Data Domain NFS/CIFS Shares and Deduplication Metrics API
+    prompt: "How do I create an NFS export on Data Domain for a NetWorker storage node via REST API?"
+    assertions:
+      - "nfs/exports"
+      - "path"
+      - "clients"
+      - "options"
+      - "rw"
+      - "no_root_squash"
+
+  - id: dd_cifs_share
+    category: DD CIFS
+    section: Data Domain NFS/CIFS Shares and Deduplication Metrics API
+    prompt: "How do I enable CIFS and create a share on Data Domain via REST API?"
+    assertions:
+      - "cifs"
+      - "shares"
+      - "name"
+      - "path"
+      - "access"
+
+  # ── DD DEDUP METRICS ──────────────────────────────────────────────────────
+
+  - id: dd_dedup_metrics
+    category: DD Dedup
+    section: Data Domain NFS/CIFS Shares and Deduplication Metrics API
+    prompt: "How do I retrieve Data Domain global deduplication and compression ratios via REST API?"
+    assertions:
+      - "compression"
+      - "pre-comp"
+      - "post-comp"
+      - "compression-factor"
+      - "stats"
+
+  - id: dd_dedup_per_su
+    category: DD Dedup
+    section: Data Domain NFS/CIFS Shares and Deduplication Metrics API
+    prompt: "How do I get deduplication statistics per storage unit on Data Domain?"
+    assertions:
+      - "storage-units"
+      - "stats"
+      - "pre-comp-used"
+      - "post-comp-used"
+      - "bytes-saved"
+
+  # ── CLOUDBOOST ────────────────────────────────────────────────────────────
+
+  - id: cloudboost_register
+    category: CloudBoost
+    section: CloudBoost API (NetWorker)
+    prompt: "How do I register a CloudBoost appliance in NetWorker via REST API?"
+    assertions:
+      - "cloudboost"
+      - "hostname"
+      - "9000"
+      - "POST"
+
+  - id: cloudboost_s3_profile
+    category: CloudBoost
+    section: CloudBoost API (NetWorker)
+    prompt: "How do I configure an AWS S3 cloud storage profile in CloudBoost for NetWorker?"
+    assertions:
+      - "storageprofiles"
+      - "AWS"
+      - "bucketName"
+      - "accessKeyId"
+      - "secretAccessKey"
+      - "encryptionEnabled"
+
+  - id: cloudboost_azure_profile
+    category: CloudBoost
+    section: CloudBoost API (NetWorker)
+    prompt: "How do I configure Azure Blob Storage in CloudBoost for use with NetWorker?"
+    assertions:
+      - "AZURE"
+      - "containerName"
+      - "accountName"
+      - "accountKey"
+
+  # ── CROSS-PRODUCT ─────────────────────────────────────────────────────────
+
+  - id: nw_vs_ppdm_comparison
+    category: Cross-Product
+    section: NetWorker vs PPDM — Quick Comparison
+    prompt: "What are the key differences between NetWorker and PPDM for Kubernetes and VMware protection?"
+    assertions:
+      - "Kubernetes"
+      - "VADP"
+      - "vCenter"
+      - "Native"
+      - "PPDM"
+      - "NetWorker"
+
+  - id: api_port_summary
+    category: Cross-Product
+    section: API Port and Endpoint Summary
+    prompt: "What ports and authentication methods are used by PPDM, NetWorker, Data Domain, and Kubernetes APIs?"
+    assertions:
+      - "8443"
+      - "9090"
+      - "3009"
+      - "6443"
+      - "Bearer"
+      - "Basic"
+      - "X-DD-AUTH-TOKEN"
+
+  # ── TROUBLESHOOTING ───────────────────────────────────────────────────────
+
+  - id: ppdm_troubleshoot_agent
+    category: Troubleshooting
+    section: PPDM Common Troubleshooting
+    prompt: "A PPDM agent is not connecting. What ports should I check and how do I re-register it?"
+    assertions:
+      - "7000"
+      - "7001"
+      - "re-register"
+      - "agent"
+
+  - id: nw_troubleshoot_backup
+    category: Troubleshooting
+    section: NetWorker Common Troubleshooting
+    prompt: "A NetWorker backup failed. What log file should I check and how do I render it?"
+    assertions:
+      - "daemon.raw"
+      - "nsr_render_log"
+      - "daemon.log"
+
+  - id: dd_troubleshoot_storage
+    category: Troubleshooting
+    section: PPDM Common Troubleshooting
+    prompt: "PPDM shows Data Domain storage is full. How do I check capacity and resolve it via API?"
+    assertions:
+      - "storage-systems"
+      - "usedSize"
+      - "totalSize"
+
+  # ── BEST PRACTICES ────────────────────────────────────────────────────────
+
+  - id: best_practices_general
+    category: Best Practices
+    section: Best Practices
+    prompt: "What are the top best practices for running NetWorker and PPDM in a production environment?"
+    assertions:
+      - "restore"
+      - "DDBoost"
+      - "retention"
+      - "SLA"
+      - "Protection Rules"
+
+  - id: best_practices_kubernetes
+    category: Best Practices
+    section: Kubernetes Protection — Best Practices
+    prompt: "What are the best practices for protecting Kubernetes workloads with PPDM?"
+    assertions:
+      - "namespace"
+      - "Protection Rules"
+      - "CSI"
+      - "CDI"
+      - "stateful"
+      - "system namespaces"
