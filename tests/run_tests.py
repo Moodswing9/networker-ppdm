@@ -31,6 +31,11 @@ from pathlib import Path
 import anthropic
 import yaml
 
+# ── Force UTF-8 stdout on Windows ──────────────────────────────────────────
+if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+
 # ── Paths ──────────────────────────────────────────────────────────────────
 ROOT = Path(__file__).parent.parent
 SKILL_FILE = ROOT / "SKILL.md"
@@ -38,7 +43,7 @@ TESTS_FILE = Path(__file__).parent / "test_cases.yaml"
 
 # ── Config ─────────────────────────────────────────────────────────────────
 MODEL = "claude-haiku-4-5-20251001"   # fast + cheap for test validation
-MAX_TOKENS = 1024
+MAX_TOKENS = 2048
 RETRY_ATTEMPTS = 3
 RETRY_DELAY = 5   # seconds between retries on rate limit
 
