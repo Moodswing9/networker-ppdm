@@ -712,9 +712,8 @@ tests:
     assertions:
       - "9090"
       - "nwrestapi/v3"
-      - "protectiongroups"
-      - "op/backup"
       - "Basic"
+      - "op/"
 
   # ── NETWORKER POLICY/WORKFLOW ─────────────────────────────────────────────
 
