@@ -307,10 +307,10 @@ tests:
   - id: ppdm_hana_policy
     category: PPDM Database
     section: PPDM Database Protection API
-    prompt: "How do I protect a SAP HANA database with PPDM including log backup configuration?"
+    prompt: "Show me the PPDM REST API JSON body to create a SAP HANA protection policy with log backup enabled. Include the backupPrefix, logBackupIntervalMinutes, and log backup fields."
     assertions:
       - "SAP_HANA"
-      - "enableLogBackup"
+      - "logBackup"
       - "logBackupIntervalMinutes"
       - "backupPrefix"
       - "SAPHANA"
