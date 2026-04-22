@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=70", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "networker-ppdm"
+version = "1.0.0"
+description = "Python clients and automation scripts for Dell EMC NetWorker, PPDM, and Data Domain"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "requests>=2.31",
+    "urllib3>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "responses>=0.25",      # HTTP mock for requests
+]
+skill-tests = [
+    "anthropic>=0.84",
+    "pyyaml>=6.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ppdm*", "networker*", "datadomain*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["ppdm", "networker", "datadomain"]
