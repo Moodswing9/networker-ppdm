@@ -1,8 +1,103 @@
 # networker-ppdm
 
-A comprehensive Claude Code skill for Dell EMC **NetWorker** and **PowerProtect Data Manager (PPDM)** — covering backup/restore operations, Kubernetes protection, database agents, REST APIs, CLI commands, troubleshooting, and automation.
+Python REST API clients, automation scripts, and a Claude Code skill for Dell EMC **NetWorker**, **PowerProtect Data Manager (PPDM)**, and **Data Domain** — covering backup/restore operations, Kubernetes protection, DDBoost, database agents, SLA reporting, and automation.
 
-## What's covered
+---
+
+## Python Library
+
+Install and import the clients directly in your scripts:
+
+```bash
+pip install -r requirements.txt
+cp .env.example .env   # fill in your host/user/pass
+```
+
+### PPDMClient
+
+```python
+from ppdm import PPDMClient
+
+with PPDMClient.from_env() as ppdm:
+    # List all failed Kubernetes backup jobs
+    for job in ppdm.failed_activities(asset_type="KUBERNETES"):
+        print(job["name"], job["startTime"])
+
+    # Trigger on-demand backup and get the activity ID
+    policy = ppdm.get_policy_by_name("k8s-daily")
+    result = ppdm.trigger_backup(policy["id"])
+
+    # Restore a namespace to a new location
+    copy = ppdm.latest_copy(asset_id)
+    ppdm.restore_kubernetes_to_new_namespace(
+        copy["id"], target_namespace="ns-restored", target_cluster_id="..."
+    )
+```
+
+**Available methods:** `list_assets`, `get_asset`, `list_copies`, `latest_copy`, `list_activities`, `failed_activities`, `running_activities`, `cancel_activity`, `list_policies`, `get_policy_by_name`, `create_policy`, `assign_assets`, `trigger_backup`, `create_protection_rule`, `list_inventory_sources`, `discover_inventory_source`, `list_storage_systems`, `restore`, `restore_kubernetes_to_new_namespace`
+
+### NWClient
+
+```python
+from networker import NWClient
+
+with NWClient.from_env() as nw:
+    savesets = nw.list_savesets_for_client("web01.example.com")
+    latest   = nw.latest_full_backup("web01.example.com")
+    nw.trigger_group_backup("Linux-Clients")
+```
+
+**Available methods:** `list_clients`, `get_client`, `list_savesets`, `list_savesets_for_client`, `latest_full_backup`, `list_policies`, `list_workflows`, `list_protection_groups`, `trigger_group_backup`, `start_recover`
+
+### DDClient
+
+```python
+from datadomain import DDClient
+
+with DDClient.from_env() as dd:
+    dd.enable_ddboost()
+    dd.create_storage_unit("ppdm-su-01", "ddboost-user", soft_limit_tib=10.0)
+    print(dd.filesystem_stats())
+```
+
+**Available methods:** `ddboost_status`, `enable_ddboost`, `disable_ddboost`, `list_storage_units`, `create_storage_unit`, `assign_user_to_storage_unit`, `system_info`, `filesystem_stats`, `list_users`, `create_user`
+
+---
+
+## Automation Scripts
+
+Ready-to-run scripts — require `.env` with credentials set.
+
+```bash
+# Report all failed backup activities (exit 1 if failures found — CI-friendly)
+python scripts/check_failed_jobs.py
+python scripts/check_failed_jobs.py --asset-type KUBERNETES
+python scripts/check_failed_jobs.py --json
+
+# SLA compliance report
+python scripts/sla_report.py
+python scripts/sla_report.py --non-compliant-only
+
+# Trigger on-demand backup (optionally poll until completion)
+python scripts/ondemand_backup.py --asset "prod-namespace" --policy "k8s-daily"
+python scripts/ondemand_backup.py --asset "prod-namespace" --policy "k8s-daily" --wait
+```
+
+---
+
+## Claude Code Skill
+
+Install the skill globally to get expert NetWorker / PPDM guidance inline in Claude Code:
+
+```bash
+npx skills add Moodswing9/networker-ppdm -g
+```
+
+Once installed, the skill activates automatically when you ask questions about NetWorker, PPDM, Data Domain, or backup/restore operations.
+
+**Requirements:** [Claude Code](https://claude.ai/code) CLI, `npx` (Node.js)
+
+### What the skill covers
 
 | Product | Areas |
 |---|---|
@@ -12,26 +107,22 @@ A comprehensive Claude Code skill for Dell EMC **NetWorker** and **PowerProtect 
 | **CloudBoost** | Appliance registration, AWS S3 / Azure Blob cloud profiles, NetWorker device integration |
 | **Kubernetes** | Full 10-step PPDM protection guide — CDI, VolumeSnapshot, RBAC, policy, restore, monitoring |
 
-## Install
-
-```bash
-npx skills add Moodswing9/networker-ppdm -g
-```
-
-## Usage
-
-Once installed, the skill activates automatically in Claude Code when you ask questions about NetWorker, PPDM, Data Domain, or backup/restore operations.
-
-## Requirements
-
-- [Claude Code](https://claude.ai/code) CLI
-- `npx` (Node.js)
-
 ---
 
-## Test Suite
+## Tests
 
-The `tests/` directory contains a comprehensive test suite that validates every section of the skill.
+Two test suites — one for the Python library, one for the Claude Code skill.
+
+### Unit Tests (Python library)
+
+```bash
+pip install -e ".[dev]"
+python -m pytest tests/unit/          # 43 tests, fully mocked — no real servers needed
+```
+
+### Skill Validation Tests
+
+The `tests/` directory validates every section of `SKILL.md` by sending prompts to Claude and asserting the responses contain the expected endpoints, commands, and terminology.
 
 ### What's tested
 
