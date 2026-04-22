@@ -11,6 +11,8 @@ license = { text = "MIT" }
 dependencies = [
     "requests>=2.31",
     "urllib3>=2.0",
+    "typer>=0.12",
+    "rich>=13.7",
 ]
 
 [project.optional-dependencies]
@@ -26,7 +28,7 @@ skill-tests = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["ppdm*", "networker*", "datadomain*"]
+include = ["ppdm*", "networker*", "datadomain*", "orchestrator*", "providers*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]
@@ -34,3 +36,7 @@ addopts = "-v --tb=short"
 
 [tool.coverage.run]
 source = ["ppdm", "networker", "datadomain"]
+
+
+[project.scripts]
+backupctl = "orchestrator.cli:app"

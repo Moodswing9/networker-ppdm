@@ -83,7 +83,28 @@ python scripts/ondemand_backup.py --asset "prod-namespace" --policy "k8s-daily"
 python scripts/ondemand_backup.py --asset "prod-namespace" --policy "k8s-daily" --wait
 ```
 
+
 ---
+
+## Unified CLI
+
+A new thin orchestration layer, `backupctl`, sits on top of the existing PPDM, NetWorker, and Data Domain clients and gives you one operator-friendly entry point for health checks, inventory, and backup triggers.
+
+```bash
+pip install -e .
+backupctl doctor
+backupctl inventory --format json
+backupctl protect ppdm --target k8s-daily
+backupctl protect networker --target Linux-Clients
+backupctl dd status
+```
+
+### Initial commands
+
+- `backupctl doctor` — cross-platform health check for PPDM, NetWorker, and Data Domain
+- `backupctl inventory` — combined PPDM + NetWorker inventory output
+- `backupctl protect` — trigger a PPDM policy backup or NetWorker protection group backup
+- `backupctl dd status` — inspect Data Domain status and filesystem details
 
 ## Claude Code Skill
 
