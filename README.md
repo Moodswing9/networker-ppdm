@@ -281,4 +281,6 @@ Edit `tests/test_cases.yaml` and add an entry:
 
 ## License
 
-MIT
+Copyright (c) 2026 Timur Poyraz. All rights reserved.
+
+No part of this software may be reproduced, distributed, or modified in any form or by any means without express written permission from the copyright holder.
