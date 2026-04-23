@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+import sys
 
 import typer
 from rich import print
+from rich.markdown import Markdown
 from rich.table import Table
 
 from orchestrator.doctor import run_doctor
@@ -72,6 +74,65 @@ def dd_status():
     """Show Data Domain status, filesystem, and system details."""
     result = DataDomainProvider().status()
     print(json.dumps(result, indent=2, default=str))
+
+
+@app.command()
+def ask(
+    question: str = typer.Argument(..., help="Question about NetWorker or PPDM"),
+    top_k: int = typer.Option(5, "--top-k", help="Context chunks to retrieve"),
+    skill: str = typer.Option("SKILL.md", "--skill", help="Path to SKILL.md"),
+    rebuild: bool = typer.Option(False, "--rebuild", help="Force rebuild of vector index"),
+):
+    """Ask a NetWorker/PPDM question answered by RAG over SKILL.md.
+
+    Requires NVIDIA_API_KEY to be set in the environment.
+    """
+    try:
+        from rag.pipeline import RagPipeline
+    except ImportError:
+        print("[red]openai package required — run: pip install openai>=1.0[/red]")
+        raise typer.Exit(1)
+
+    import os
+    if not os.environ.get("NVIDIA_API_KEY"):
+        print("[red]NVIDIA_API_KEY is not set[/red]")
+        raise typer.Exit(1)
+
+    pipeline = RagPipeline(skill_path=skill)
+    pipeline.build_index(force=rebuild)
+    answer = pipeline.ask(question, top_k=top_k)
+    print(Markdown(answer))
+
+
+@app.command()
+def generate(
+    description: str = typer.Argument(..., help="Script description in plain English"),
+    output: str | None = typer.Option(None, "--output", "-o", help="Save script to file"),
+    skill: str = typer.Option("SKILL.md", "--skill", help="Path to SKILL.md (unused, for parity)"),
+):
+    """Generate a NetWorker/PPDM automation script using Qwen2.5-Coder-32B.
+
+    Requires NVIDIA_API_KEY to be set in the environment.
+    """
+    try:
+        from orchestrator.generate import generate_script
+    except ImportError:
+        print("[red]openai package required — run: pip install openai>=1.0[/red]")
+        raise typer.Exit(1)
+
+    import os
+    if not os.environ.get("NVIDIA_API_KEY"):
+        print("[red]NVIDIA_API_KEY is not set[/red]")
+        raise typer.Exit(1)
+
+    script = generate_script(description)
+
+    if output:
+        from pathlib import Path
+        Path(output).write_text(script, encoding="utf-8")
+        print(f"[green]Script written to {output}[/green]")
+    else:
+        print(Markdown(f"```python\n{script}\n```"))
 
 
 if __name__ == "__main__":
