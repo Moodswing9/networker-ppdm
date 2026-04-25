@@ -224,6 +224,6 @@ No part of this software may be reproduced, distributed, or modified in any form
 
 <div align="center">
 
-Built by [Moodswing9](https://github.com/Moodswing9) · [Portfolio](https://moodswing9.github.io/Index/)
+Built by [Moodswing9](https://github.com/Moodswing9) · [Portfolio](https://moodswing9.github.io)
 
 </div>
