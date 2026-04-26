@@ -9,6 +9,7 @@
 [![Python](https://img.shields.io/badge/python-3.9%2B-3b82f6?style=flat-square)](#)
 [![Tests](https://img.shields.io/badge/tests-105%20cases-22c55e?style=flat-square)](#tests)
 [![Claude Code Plugin](https://img.shields.io/badge/claude%20code-plugin-f59e0b?style=flat-square)](#claude-code-plugin)
+[![NVIDIA NIM](https://img.shields.io/badge/NVIDIA-NIM-76b900?style=flat-square)](#ai-features)
 
 </div>
 
@@ -110,6 +111,10 @@ backupctl inventory --format json
 backupctl protect ppdm --target k8s-daily
 backupctl protect networker --target Linux-Clients
 backupctl dd status
+
+# AI commands — require NVIDIA_API_KEY
+backupctl ask "How do I restore a Kubernetes namespace from a PPDM copy?"
+backupctl generate "Python script that lists all PPDM policies older than 30 days"
 ```
 
 | Command | Description |
@@ -118,6 +123,41 @@ backupctl dd status
 | `backupctl inventory` | Combined PPDM + NetWorker inventory output |
 | `backupctl protect` | Trigger a PPDM policy or NetWorker protection group backup |
 | `backupctl dd status` | Inspect Data Domain status and filesystem details |
+| `backupctl ask` | Plain-English Q&A over SKILL.md — RAG-powered, answered by Nemotron 70B |
+| `backupctl generate` | Generate NetWorker/PPDM automation scripts with Qwen2.5-Coder-32B |
+
+---
+
+## AI Features
+
+Powered by **NVIDIA NIM** — runs against the hosted NIM API or your own self-hosted NIM endpoints.
+
+### `backupctl ask` — RAG over SKILL.md
+
+Asks NetWorker/PPDM questions in plain English. The pipeline:
+
+1. **Chunks** SKILL.md by H2 heading (`rag/chunker.py`)
+2. **Embeds** each chunk with `nvidia/llama-3.2-nemoretriever-300m-embed-v1` (`rag/embedder.py`)
+3. **Stores** vectors in an in-memory cosine-similarity index, cached as `.rag_index.json` (`rag/retriever.py`)
+4. **Retrieves** the top-K chunks for the user's question, then asks `nvidia/llama-3.1-nemotron-70b-instruct` to answer using only that context (`rag/pipeline.py`)
+
+```bash
+export NVIDIA_API_KEY=nvapi-...
+backupctl ask "What's the safest way to cancel a stuck PPDM activity?"
+backupctl ask "Show me the REST call to list failed Kubernetes jobs" --top-k 8
+backupctl ask "..." --rebuild   # force rebuild of vector index
+```
+
+### `backupctl generate` — Domain-Aware Script Generation
+
+Generates production-ready Python or bash scripts targeting the NetWorker/PPDM REST APIs. Uses **`qwen/qwen2.5-coder-32b-instruct`** with a system prompt that constrains output to clean, error-handled, log-aware code (`orchestrator/generate.py`).
+
+```bash
+backupctl generate "Bash script that nightly reports DD storage units over 80% full"
+backupctl generate "Python script that triggers PPDM backups for all K8s namespaces" -o backup_all_ns.py
+```
+
+> **Requirements for AI features:** `pip install openai>=1.0` and `NVIDIA_API_KEY` set in the environment. Hosted NIM endpoints work out of the box; self-hosted NIM containers work by overriding the `base_url` constant in `rag/pipeline.py` and `orchestrator/generate.py`.
 
 ---
 
