@@ -4,11 +4,11 @@
 
 **Python REST API clients, unified CLI, automation scripts, and a Claude Code skill for Dell EMC NetWorker, PowerProtect Data Manager, and Data Domain**
 
-[![Version](https://img.shields.io/badge/version-2.1.0-6366f1?style=flat-square)](https://github.com/Moodswing9/networker-ppdm/releases)
+[![Version](https://img.shields.io/badge/version-2.3.0-6366f1?style=flat-square)](https://github.com/Moodswing9/networker-ppdm/releases)
 [![License](https://img.shields.io/badge/license-All%20Rights%20Reserved-ef4444?style=flat-square)](#license)
 [![Python](https://img.shields.io/badge/python-3.9%2B-3b82f6?style=flat-square)](#)
 [![Tests](https://img.shields.io/badge/tests-105%20cases-22c55e?style=flat-square)](#tests)
-[![Claude Code Skill](https://img.shields.io/badge/claude%20code-skill-f59e0b?style=flat-square)](#claude-code-skill)
+[![Claude Code Plugin](https://img.shields.io/badge/claude%20code-plugin-f59e0b?style=flat-square)](#claude-code-plugin)
 
 </div>
 
