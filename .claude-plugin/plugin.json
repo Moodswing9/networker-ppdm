@@ -1,0 +1,34 @@
+{
+  "name": "networker-ppdm",
+  "version": "2.2.0",
+  "description": "Expert guidance and automation for Dell EMC NetWorker, PowerProtect Data Manager (PPDM), and Data Domain — REST API clients, unified backupctl CLI, slash commands, and a 105-test validated skill.",
+  "author": {
+    "name": "Moodswing9",
+    "url": "https://github.com/Moodswing9"
+  },
+  "homepage": "https://github.com/Moodswing9/networker-ppdm",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Moodswing9/networker-ppdm.git"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "keywords": [
+    "dell-emc",
+    "networker",
+    "ppdm",
+    "powerprotect",
+    "data-domain",
+    "backup",
+    "data-protection",
+    "kubernetes",
+    "ddboost",
+    "rest-api",
+    "automation",
+    "claude-skill"
+  ],
+  "components": {
+    "skills": ["./skills/networker-ppdm"],
+    "commands": ["./commands"],
+    "agents": ["./agents"]
+  }
+}

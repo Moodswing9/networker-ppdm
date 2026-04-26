@@ -121,17 +121,26 @@ backupctl dd status
 
 ---
 
-## Claude Code Skill
+## Claude Code Plugin
 
-Install globally to get expert NetWorker / PPDM guidance inline in Claude Code:
+Install as a plugin to get the skill, four slash commands, and a specialist agent inline in Claude Code:
 
-```bash
-npx skills add Moodswing9/networker-ppdm -g
+```
+/plugin install Moodswing9/networker-ppdm
 ```
 
-The skill activates automatically when you ask questions about NetWorker, PPDM, Data Domain, or backup/restore operations.
+Once installed, you get:
 
-> **Requirements:** [Claude Code](https://claude.ai/code) CLI · `npx` (Node.js)
+| Component | What it does |
+|:---|:---|
+| **`networker-ppdm` skill** | Auto-activates when you ask about NetWorker, PPDM, Data Domain, or backup/restore operations. |
+| **`/ppdm-doctor`** | Cross-product health check across PPDM + NetWorker + Data Domain. |
+| **`/ppdm-failed-jobs`** | Reports failed PPDM activities with root-cause hints. CI-friendly exit code. |
+| **`/ppdm-sla`** | SLA compliance report — surfaces non-compliant assets with remediation suggestions. |
+| **`/ppdm-backup`** | Trigger on-demand PPDM backup, optionally polling until completion. |
+| **`backup-engineer` agent** | Senior-level deep-dive agent for complex multi-product troubleshooting. Use via the Agent tool with `subagent_type: "backup-engineer"`. |
+
+> **Requirements:** [Claude Code](https://claude.com/claude-code) 1.0.33+. Python 3.10+ on the machine running the slash commands (for the underlying scripts).
 
 ### Coverage
 
