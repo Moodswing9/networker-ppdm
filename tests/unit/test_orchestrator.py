@@ -162,3 +162,22 @@ def test_networker_provider_healthcheck_error(monkeypatch):
 
     assert result["ok"] is False
     assert "networker unavailable" in result["error"]
+
+
+def test_datadomain_provider_healthcheck_error(monkeypatch):
+    def _boom():
+        raise RuntimeError("datadomain unreachable")
+
+    monkeypatch.setattr("providers.datadomain.DDClient.from_env", _boom)
+
+    result = DataDomainProvider().healthcheck()
+
+    assert result["ok"] is False
+    assert "datadomain unreachable" in result["error"]
+
+
+def test_run_protect_invalid_provider():
+    import pytest
+
+    with pytest.raises(ValueError, match="Unsupported provider"):
+        run_protect("s3", "some-target")
