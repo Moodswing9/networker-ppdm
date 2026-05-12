@@ -4,7 +4,7 @@
 
 **Python REST API clients, unified CLI, automation scripts, and a Claude Code skill for Dell EMC NetWorker, PowerProtect Data Manager, and Data Domain**
 
-[![Version](https://img.shields.io/badge/version-2.3.0-6366f1?style=flat-square)](https://github.com/Moodswing9/networker-ppdm/releases)
+[![Version](https://img.shields.io/badge/version-2.4.0-6366f1?style=flat-square)](https://github.com/Moodswing9/networker-ppdm/releases)
 [![License](https://img.shields.io/badge/license-All%20Rights%20Reserved-ef4444?style=flat-square)](#license)
 [![Python](https://img.shields.io/badge/python-3.9%2B-3b82f6?style=flat-square)](#)
 [![Tests](https://img.shields.io/badge/tests-105%20cases-22c55e?style=flat-square)](#tests)
@@ -27,6 +27,8 @@ A complete automation and expert-guidance toolkit for Dell EMC backup infrastruc
 pip install -r requirements.txt
 cp .env.example .env   # fill in your host / user / pass
 ```
+
+Both clients implement **automatic retry with exponential backoff** — transient failures (HTTP 429, 500, 502, 503, 504, connection errors) are retried up to 3 times with randomised jitter before raising. Non-retryable responses (4xx) surface immediately.
 
 ### PPDMClient
 
