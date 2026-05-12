@@ -14,6 +14,8 @@ Usage:
 from __future__ import annotations
 
 import os
+import random
+import time
 import urllib3
 
 import requests
@@ -25,6 +27,9 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 _DEFAULT_PORT   = 9090
 _API_BASE_PATH  = "nwrestapi/v3"
+_RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
+_MAX_RETRIES    = 3
+_BACKOFF_BASE   = 1.0  # seconds
 
 
 class NWClient(SavesetsMixin, NWPoliciesMixin):
@@ -61,8 +66,28 @@ class NWClient(SavesetsMixin, NWPoliciesMixin):
 
     # ── HTTP helpers ──────────────────────────────────────────────────────────
 
+    def _request_with_retry(self, method: str, url: str, **kwargs) -> requests.Response:
+        """Send an HTTP request, retrying transient failures with exponential backoff."""
+        last_resp: requests.Response | None = None
+        last_exc: Exception | None = None
+        for attempt in range(_MAX_RETRIES + 1):
+            try:
+                resp = getattr(self._session, method)(url, **kwargs)
+                if resp.status_code not in _RETRY_STATUSES:
+                    return resp
+                last_resp = resp
+            except (requests.ConnectionError, requests.Timeout) as exc:
+                last_exc = exc
+            if attempt < _MAX_RETRIES:
+                delay = _BACKOFF_BASE * (2 ** attempt) + random.uniform(0, 0.5)
+                time.sleep(delay)
+        if last_resp is not None:
+            last_resp.raise_for_status()
+        raise last_exc  # type: ignore[misc]
+
     def _get(self, path: str, params: dict | None = None) -> dict:
-        resp = self._session.get(
+        resp = self._request_with_retry(
+            "get",
             f"{self.base_url}/global/{path.lstrip('/')}",
             params=params,
         )
@@ -70,7 +95,8 @@ class NWClient(SavesetsMixin, NWPoliciesMixin):
         return resp.json()
 
     def _post(self, path: str, body: dict | None = None) -> dict:
-        resp = self._session.post(
+        resp = self._request_with_retry(
+            "post",
             f"{self.base_url}/global/{path.lstrip('/')}",
             json=body or {},
         )
@@ -78,7 +104,8 @@ class NWClient(SavesetsMixin, NWPoliciesMixin):
         return resp.json() if resp.content else {}
 
     def _put(self, path: str, body: dict) -> dict:
-        resp = self._session.put(
+        resp = self._request_with_retry(
+            "put",
             f"{self.base_url}/global/{path.lstrip('/')}",
             json=body,
         )
@@ -86,8 +113,9 @@ class NWClient(SavesetsMixin, NWPoliciesMixin):
         return resp.json() if resp.content else {}
 
     def _delete(self, path: str) -> None:
-        resp = self._session.delete(
-            f"{self.base_url}/global/{path.lstrip('/')}"
+        resp = self._request_with_retry(
+            "delete",
+            f"{self.base_url}/global/{path.lstrip('/')}",
         )
         resp.raise_for_status()
 
