@@ -3633,3 +3633,415 @@ ddsh> filesys clean status                       # check clean progress
 - Rotate PPDM `admin` credentials and store tokens securely; tokens expire after 10 minutes by default.
 - Monitor SLA compliance daily via `GET /slas` or the PPDM dashboard.
 - For large environments, filter `mminfo` queries with time ranges — unfiltered queries can be slow.
+
+---
+
+## Few-Shot API Examples
+
+Annotated request/response pairs for the most common PPDM and NetWorker operations. Each example shows the exact request, a representative response, and which fields to extract for follow-up actions.
+
+---
+
+### PPDM — List failed activities (last 24 h)
+
+**Request:**
+```bash
+GET /api/v2/activities?filter=state%20eq%20%22FAILED%22%20and%20classType%20eq%20%22JOB%22&pageSize=25&orderby=startTime%20DESC
+Authorization: Bearer <token>
+```
+
+**Response (truncated to one item):**
+```json
+{
+  "content": [
+    {
+      "id": "a3f2c1d4-8b7e-4f90-9c2a-123456789abc",
+      "name": "Protect prod-k8s-namespace",
+      "state": "FAILED",
+      "classType": "JOB",
+      "category": "PROTECT",
+      "startTime": "2026-05-14T01:00:12Z",
+      "endTime": "2026-05-14T01:04:38Z",
+      "asset": {
+        "id": "b1c2d3e4-...",
+        "name": "prod-k8s-namespace",
+        "type": "K8S_NAMESPACE"
+      },
+      "protectionPolicy": {
+        "id": "pol-uuid-...",
+        "name": "k8s-daily-policy"
+      },
+      "result": {
+        "status": "FAILED",
+        "error": {
+          "code": "0x0000dead",
+          "message": "VolumeSnapshot timed out waiting for ReadyToUse: 300s elapsed"
+        }
+      },
+      "stats": {
+        "bytesTransferred": 0,
+        "percentComplete": 0
+      }
+    }
+  ],
+  "page": { "totalElements": 3, "number": 0, "size": 25 }
+}
+```
+
+**Key fields to extract:**
+- `content[].id` → activity ID for detail drill-down
+- `content[].result.error.message` → root cause string
+- `content[].asset.name` + `asset.type` → what failed and what type
+- `page.totalElements` → how many total failures (paginate if > `pageSize`)
+
+**Follow-up:** `GET /api/v2/activities/<id>` for full sub-task tree.
+
+---
+
+### PPDM — Get activity detail (sub-task error chain)
+
+**Request:**
+```bash
+GET /api/v2/activities/a3f2c1d4-8b7e-4f90-9c2a-123456789abc
+Authorization: Bearer <token>
+```
+
+**Response (key fields):**
+```json
+{
+  "id": "a3f2c1d4-8b7e-4f90-9c2a-123456789abc",
+  "state": "FAILED",
+  "result": {
+    "status": "FAILED",
+    "error": {
+      "code": "0x0000dead",
+      "message": "VolumeSnapshot timed out waiting for ReadyToUse: 300s elapsed",
+      "extendedErrorCode": "SNAPSHOT_TIMEOUT",
+      "remediation": "Check CSI driver logs and VolumeSnapshotClass configuration."
+    }
+  },
+  "subTasks": [
+    {
+      "name": "CreateVolumeSnapshot",
+      "state": "FAILED",
+      "result": { "error": { "message": "Snapshot not ready after 300s" } }
+    },
+    {
+      "name": "TransferData",
+      "state": "NOT_RUN"
+    }
+  ],
+  "host": { "name": "ppdm01.example.com" },
+  "protectionPolicy": { "name": "k8s-daily-policy" }
+}
+```
+
+**Key fields:**
+- `result.error.message` → human-readable error
+- `result.error.remediation` → PPDM-provided fix hint (present on many errors)
+- `subTasks[].name` + `subTasks[].state` → pinpoint which sub-step failed
+- Cross-reference `subTasks[].name == "CreateVolumeSnapshot"` failing → CSI / VolumeSnapshotClass issue
+
+---
+
+### PPDM — Trigger on-demand protection and poll to completion
+
+**Step 1 — Trigger:**
+```bash
+POST /api/v2/protection-policies/<policyId>/protections
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "assetIds": ["<assetId>"],
+  "stages": [{"type": "PROTECTION"}]
+}
+```
+
+**Response:**
+```json
+{
+  "activityId": "c4d5e6f7-...",
+  "message": "Protection job has been submitted."
+}
+```
+
+**Step 2 — Poll (repeat until terminal state):**
+```bash
+GET /api/v2/activities/c4d5e6f7-...
+Authorization: Bearer <token>
+```
+
+**Poll response evolution:**
+```json
+{ "state": "QUEUED",  "stats": { "percentComplete": 0  } }
+{ "state": "RUNNING", "stats": { "percentComplete": 42 } }
+{ "state": "OK",      "stats": { "percentComplete": 100, "bytesTransferred": 21474836480 } }
+```
+
+**Terminal states:** `OK`, `FAILED`, `CANCELED`, `SKIPPED`
+
+**On `OK`:** extract `stats.bytesTransferred` (bytes) and compute duration from `startTime`/`endTime`.
+
+---
+
+### PPDM — List storage systems with capacity
+
+**Request:**
+```bash
+GET /api/v2/storage-systems
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "content": [
+    {
+      "id": "dd-uuid-001",
+      "name": "dd9900-a.example.com",
+      "type": "DATA_DOMAIN_SYSTEM",
+      "state": "CONNECTED",
+      "health": { "status": "OK", "score": 100 },
+      "details": {
+        "dataDomain": {
+          "size": 107374182400,
+          "usedSize": 44212900659,
+          "availableSize": 63161281741,
+          "compressionFactor": 28.4
+        }
+      }
+    }
+  ]
+}
+```
+
+**Key fields:**
+- `details.dataDomain.size` / `usedSize` → compute % used: `(usedSize / size) * 100`
+- `details.dataDomain.compressionFactor` → dedup ratio (high = efficient)
+- `health.status != "OK"` → trigger alert; check `health.issues[]` for detail
+- Alert threshold: > 85% used → flag for expansion
+
+---
+
+### PPDM — System health check
+
+**Request:**
+```bash
+GET /api/v2/system-health
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "overall": {
+    "status": "HEALTHY",
+    "score": 98
+  },
+  "components": [
+    { "name": "Database",     "status": "HEALTHY" },
+    { "name": "Elasticsearch","status": "HEALTHY" },
+    { "name": "Networking",   "status": "WARNING", "message": "Latency to dd9900-b elevated: 142ms" },
+    { "name": "StorageSystems","status": "HEALTHY" }
+  ]
+}
+```
+
+**Key fields:**
+- `overall.score` < 80 → CRITICAL; < 95 → WARNING
+- `components[].status == "WARNING"` or `"UNHEALTHY"` → surface `message` to operator
+- Common degraded components: `Elasticsearch` (index bloat), `Networking` (DD latency), `AgentService` (cert issues)
+
+---
+
+### PPDM — List assets by type
+
+**Request (Kubernetes namespaces):**
+```bash
+GET /api/v2/assets?filter=type%20eq%20%22K8S_NAMESPACE%22&pageSize=100
+Authorization: Bearer <token>
+```
+
+**Request (VMware VMs):**
+```bash
+GET /api/v2/assets?filter=type%20eq%20%22VMWARE_VIRTUAL_MACHINE%22&pageSize=100
+Authorization: Bearer <token>
+```
+
+**Asset types:** `K8S_NAMESPACE`, `VMWARE_VIRTUAL_MACHINE`, `ORACLE_DATABASE`, `MICROSOFT_SQL_DATABASE`, `FILESYSTEM`, `NAS_SHARE`
+
+**Response (one item):**
+```json
+{
+  "content": [
+    {
+      "id": "asset-uuid-...",
+      "name": "prod-payments-ns",
+      "type": "K8S_NAMESPACE",
+      "protectionStatus": "PROTECTED",
+      "complianceStatus": "IN_COMPLIANCE",
+      "lastAvailableCopyTime": "2026-05-14T02:00:45Z",
+      "protectionPolicyName": "k8s-daily-policy",
+      "details": {
+        "k8s": {
+          "inventorySourceName": "prod-k8s-cluster",
+          "namespace": "prod-payments-ns"
+        }
+      }
+    }
+  ]
+}
+```
+
+**Key fields:**
+- `protectionStatus == "UNPROTECTED"` → asset exists but no policy assigned
+- `complianceStatus == "OUT_OF_COMPLIANCE"` → last copy is older than SLA window
+- `lastAvailableCopyTime` → compare against now to compute hours over SLA
+
+---
+
+### PPDM — Alert list by severity
+
+**Request (critical and warning only):**
+```bash
+GET /api/v2/alerts?filter=severity%20in%20(%22CRITICAL%22%2C%22WARNING%22)&orderby=createTime%20DESC&pageSize=50
+Authorization: Bearer <token>
+```
+
+**Response (one item):**
+```json
+{
+  "content": [
+    {
+      "id": "alert-uuid-...",
+      "messageCode": "STORAGE_CAPACITY_WARNING",
+      "severity": "WARNING",
+      "message": "Storage system dd9900-a is at 87% capacity.",
+      "createTime": "2026-05-14T06:42:11Z",
+      "acknowledgeRequired": false,
+      "acknowledged": false,
+      "affectedObject": {
+        "id": "dd-uuid-001",
+        "name": "dd9900-a.example.com",
+        "resourceType": "STORAGE_SYSTEM"
+      }
+    }
+  ]
+}
+```
+
+**Key fields:**
+- `messageCode` → unique identifier for programmatic matching (e.g. `STORAGE_CAPACITY_WARNING`)
+- `affectedObject.name` + `resourceType` → what is affected
+- `acknowledged == false` → unacknowledged alerts needing attention
+- Cross-reference `affectedObject.id` → `GET /api/v2/storage-systems/<id>` for capacity detail
+
+---
+
+### NetWorker — mminfo query with annotated output
+
+**Command:**
+```bash
+mminfo -s nwserver01 \
+  -q "savetime>last 24 hours,level=full" \
+  -r "client,name,ssid,level,savetime(22),sumsize,completiontime,status" \
+  -t "%-20s %-30s %-20s %-6s %-24s %-12s %-24s %s\n"
+```
+
+**Output:**
+```
+client               name                           ssid                 level  savetime                 sumsize      completiontime           status
+db-server01          /                              4009284231           full   05/14/2026 02:00:15 AM    98340201472  05/14/2026 03:12:44 AM   succeeded
+web-server02         /                              4009284232           full   05/14/2026 02:00:22 AM   12845056000  05/14/2026 02:28:11 AM   succeeded
+oracle-host01        /oracle/data                   4009284233           full   05/14/2026 02:01:05 AM           0   05/14/2026 02:01:09 AM   interrupted
+```
+
+**Key fields:**
+- `status` → `succeeded`, `interrupted`, `failed`, `canceled`
+- `sumsize == 0` with `status=interrupted` → backup started but no data transferred; likely agent crash or network issue
+- `ssid` → saveset ID for `nsrinfo` browse or `nsrmm` operations
+
+**Follow-up for interrupted savesets:**
+```bash
+# Browse a specific saveset
+nsrinfo -s nwserver01 -S <ssid>
+
+# Check daemon log for that client around the savetime
+nsr_render_log /nsr/logs/daemon.raw | grep oracle-host01 | grep "02:01"
+```
+
+---
+
+### NetWorker — nsradmin client resource inspection
+
+**Command:**
+```bash
+nsradmin -s nwserver01 -e 'print type: NSR client; name: oracle-host01'
+```
+
+**Output:**
+```
+type:            NSR client;
+name:            oracle-host01;
+comment:         "";
+server net interface: "";
+backup enabled:  Yes;
+scheduled backup: No;
+group:           "oracle-group", "all-clients-group";
+save set:        "/oracle/data", "/oracle/redo";
+pool:            "Oracle-DD-Pool";
+browse policy:   "Month";
+retention policy: "Year";
+remote access:   "root@nwserver01";
+application information: "";
+```
+
+**Key fields to check during troubleshooting:**
+- `backup enabled: No` → client is manually disabled
+- `group` → which backup groups include this client (cross-reference group schedule)
+- `save set` → are the correct mount points listed? Missing a path = no backup for that data
+- `pool` → is the target pool mapped to an active device?
+- `browse policy` / `retention policy` → if expiry is too short, recoveries may fail with "no copies available"
+
+**To disable a client for maintenance:**
+```bash
+nsradmin -s nwserver01 -e 'update type: NSR client; name: oracle-host01; backup enabled: No'
+```
+
+---
+
+### NetWorker — List savesets for a client via REST API
+
+**Request:**
+```bash
+GET https://nwserver01:9090/nwrestapi/v3/global/savesets?q=clientId:<clientId>&limit=10
+Authorization: Basic <base64(user:pass)>
+```
+
+**Response:**
+```json
+{
+  "savesets": [
+    {
+      "id": "4009284231",
+      "name": "/",
+      "clientHostname": "db-server01",
+      "level": "Full",
+      "status": "Succeeded",
+      "saveTime": "2026-05-14T02:00:15Z",
+      "size": { "value": 98340201472, "unit": "Byte" },
+      "retentionTime": "2027-05-14T00:00:00Z",
+      "browseTime": "2026-06-14T00:00:00Z",
+      "storageNodes": ["dd9900-a.example.com"]
+    }
+  ],
+  "count": 1
+}
+```
+
+**Key fields:**
+- `status` → `Succeeded`, `Failed`, `Canceled`
+- `size.value` → bytes backed up; `0` with `Failed` → no data saved
+- `retentionTime` / `browseTime` → recovery window; expired savesets cannot be browsed
+- `storageNodes` → which Data Domain holds the data (useful for DD-side troubleshooting)
