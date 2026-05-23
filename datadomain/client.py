@@ -22,9 +22,10 @@ from .ddboost import DDBoostMixin
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-_DEFAULT_PORT  = 3009
-_API_BASE_PATH = "rest/v1.0"
-_DD_SYSTEM     = "dd-systems/0"  # primary system endpoint prefix
+_DEFAULT_PORT    = 3009
+_API_BASE_PATH   = "rest/v1.0"
+_DD_SYSTEM       = "dd-systems/0"  # primary system endpoint prefix
+_DEFAULT_TIMEOUT = 30              # seconds
 
 
 class DDClient(DDBoostMixin):
@@ -61,6 +62,7 @@ class DDClient(DDBoostMixin):
         resp = self._session.post(
             f"{self.base_url}/auth",
             json={"username": self._username, "password": self._password},
+            timeout=_DEFAULT_TIMEOUT,
         )
         resp.raise_for_status()
         self._token = resp.json()["token"]
@@ -90,6 +92,7 @@ class DDClient(DDBoostMixin):
         resp = self._session.get(
             f"{self.base_url}/{_DD_SYSTEM}/{path.lstrip('/')}",
             params=params,
+            timeout=_DEFAULT_TIMEOUT,
         )
         resp.raise_for_status()
         return resp.json()
@@ -98,6 +101,7 @@ class DDClient(DDBoostMixin):
         resp = self._session.post(
             f"{self.base_url}/{_DD_SYSTEM}/{path.lstrip('/')}",
             json=body or {},
+            timeout=_DEFAULT_TIMEOUT,
         )
         resp.raise_for_status()
         return resp.json() if resp.content else {}
@@ -106,13 +110,15 @@ class DDClient(DDBoostMixin):
         resp = self._session.put(
             f"{self.base_url}/{_DD_SYSTEM}/{path.lstrip('/')}",
             json=body,
+            timeout=_DEFAULT_TIMEOUT,
         )
         resp.raise_for_status()
         return resp.json() if resp.content else {}
 
     def _delete(self, path: str) -> None:
         resp = self._session.delete(
-            f"{self.base_url}/{_DD_SYSTEM}/{path.lstrip('/')}"
+            f"{self.base_url}/{_DD_SYSTEM}/{path.lstrip('/')}",
+            timeout=_DEFAULT_TIMEOUT,
         )
         resp.raise_for_status()
 

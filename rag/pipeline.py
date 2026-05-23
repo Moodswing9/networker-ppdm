@@ -24,8 +24,11 @@ class RagPipeline:
         """Build or load the vector index from SKILL.md."""
         cache = Path(_CACHE_FILE)
         if cache.exists() and not force:
-            self._store.load(cache)
-            return
+            skill = Path(self._skill_path)
+            cache_is_stale = skill.exists() and skill.stat().st_mtime > cache.stat().st_mtime
+            if not cache_is_stale:
+                self._store.load(cache)
+                return
 
         chunks = load_chunks(self._skill_path)
         texts = [f"{c['heading']}\n{c['text']}" for c in chunks]

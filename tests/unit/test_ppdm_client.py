@@ -2,6 +2,7 @@
 
 import pytest
 import responses
+import requests
 
 from ppdm.client import PPDMClient
 from tests.unit.conftest import PPDM_HOST, PPDM_BASE, FAKE_TOKEN
@@ -90,3 +91,109 @@ class TestPPDMPagination:
         )
         result = ppdm_client._get("/assets/abc-123")
         assert result["id"] == "abc-123"
+
+
+class TestPPDMAuth401Retry:
+    @responses.activate
+    def test_401_triggers_reauth_and_retries(self, ppdm_client):
+        """A 401 mid-session causes one re-login then a successful retry."""
+        responses.add(
+            responses.GET,
+            f"{PPDM_BASE}/activities",
+            json={"error": "Unauthorized"},
+            status=401,
+        )
+        responses.add(
+            responses.POST,
+            f"{PPDM_BASE}/login",
+            json={"access_token": "new-token"},
+            status=200,
+        )
+        responses.add(
+            responses.GET,
+            f"{PPDM_BASE}/activities",
+            json={"content": [{"id": "job-1"}]},
+            status=200,
+        )
+        result = ppdm_client._get("/activities")
+        assert len(result["content"]) == 1
+        assert result["content"][0]["id"] == "job-1"
+
+    @responses.activate
+    def test_second_401_raises(self, ppdm_client):
+        """Re-auth is attempted only once; a second 401 propagates as an error."""
+        responses.add(
+            responses.GET,
+            f"{PPDM_BASE}/activities",
+            status=401,
+        )
+        responses.add(
+            responses.POST,
+            f"{PPDM_BASE}/login",
+            json={"access_token": "new-token"},
+            status=200,
+        )
+        responses.add(
+            responses.GET,
+            f"{PPDM_BASE}/activities",
+            status=401,
+        )
+        with pytest.raises(Exception):
+            ppdm_client._get("/activities")
+
+    @responses.activate
+    def test_reauth_updates_token_header(self, ppdm_client):
+        """After re-auth the session carries the new token."""
+        responses.add(responses.GET, f"{PPDM_BASE}/activities", status=401)
+        responses.add(
+            responses.POST,
+            f"{PPDM_BASE}/login",
+            json={"access_token": "refreshed-token"},
+            status=200,
+        )
+        responses.add(
+            responses.GET,
+            f"{PPDM_BASE}/activities",
+            json={"content": []},
+            status=200,
+        )
+        ppdm_client._get("/activities")
+        assert ppdm_client._session.headers.get("Authorization") == "Bearer refreshed-token"
+
+
+class TestPPDMPaginationEdgeCases:
+    @responses.activate
+    def test_missing_page_key_defaults_to_single_page(self, ppdm_client):
+        """Response without a 'page' key is treated as a one-page result."""
+        responses.add(
+            responses.GET,
+            f"{PPDM_BASE}/assets",
+            json={"content": [{"id": "x1"}]},
+            status=200,
+        )
+        result = ppdm_client._get("/assets")
+        assert len(result["content"]) == 1
+
+    @responses.activate
+    def test_empty_page_object_defaults_to_single_page(self, ppdm_client):
+        """page dict present but totalPages absent — treat as 1 page."""
+        responses.add(
+            responses.GET,
+            f"{PPDM_BASE}/assets",
+            json={"content": [{"id": "y1"}], "page": {}},
+            status=200,
+        )
+        result = ppdm_client._get("/assets")
+        assert len(result["content"]) == 1
+
+    @responses.activate
+    def test_total_pages_zero_returns_without_looping(self, ppdm_client):
+        """totalPages=0 should not cause an infinite loop."""
+        responses.add(
+            responses.GET,
+            f"{PPDM_BASE}/assets",
+            json={"content": [], "page": {"totalPages": 0}},
+            status=200,
+        )
+        result = ppdm_client._get("/assets")
+        assert result["content"] == []

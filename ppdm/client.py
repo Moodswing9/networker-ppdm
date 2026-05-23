@@ -29,9 +29,10 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 _DEFAULT_PORT   = 8443
 _API_VERSION    = "v2"
-_RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
-_MAX_RETRIES    = 3
-_BACKOFF_BASE   = 1.0  # seconds
+_RETRY_STATUSES  = frozenset({429, 500, 502, 503, 504})
+_MAX_RETRIES     = 3
+_BACKOFF_BASE    = 1.0   # seconds
+_DEFAULT_TIMEOUT = 30    # seconds
 
 
 class PPDMClient(AssetsMixin, ActivitiesMixin, PoliciesMixin, RestoresMixin):
@@ -96,12 +97,21 @@ class PPDMClient(AssetsMixin, ActivitiesMixin, PoliciesMixin, RestoresMixin):
     # ── HTTP helpers ──────────────────────────────────────────────────────────
 
     def _request_with_retry(self, method: str, url: str, **kwargs) -> requests.Response:
-        """Send an HTTP request, retrying transient failures with exponential backoff."""
+        """Send an HTTP request, retrying transient failures with exponential backoff.
+
+        Automatically re-authenticates on a 401 response (once per call).
+        """
+        kwargs.setdefault("timeout", _DEFAULT_TIMEOUT)
         last_resp: requests.Response | None = None
         last_exc: Exception | None = None
+        _auth_retried = False
         for attempt in range(_MAX_RETRIES + 1):
             try:
                 resp = getattr(self._session, method)(url, **kwargs)
+                if resp.status_code == 401 and not _auth_retried:
+                    _auth_retried = True
+                    self.login()
+                    continue
                 if resp.status_code not in _RETRY_STATUSES:
                     return resp
                 last_resp = resp

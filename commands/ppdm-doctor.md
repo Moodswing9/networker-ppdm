@@ -72,3 +72,4 @@ Lead with: *"Based on `backupctl doctor` output, I found [N] issues:"*
 - List each issue with: product, component, symptom, and the most likely root cause
 - For each ERROR, give one concrete next action (specific command or REST endpoint to check)
 - If everything is green, confirm in one line: "All systems healthy — PPDM, NetWorker, and Data Domain report no issues."
+- **If any PPDM protection jobs failed:** append — *"Run `/ppdm-failed-jobs` for per-job root-cause detail and asset-level history."*

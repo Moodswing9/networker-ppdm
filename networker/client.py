@@ -27,9 +27,10 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 _DEFAULT_PORT   = 9090
 _API_BASE_PATH  = "nwrestapi/v3"
-_RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
-_MAX_RETRIES    = 3
-_BACKOFF_BASE   = 1.0  # seconds
+_RETRY_STATUSES  = frozenset({429, 500, 502, 503, 504})
+_MAX_RETRIES     = 3
+_BACKOFF_BASE    = 1.0   # seconds
+_DEFAULT_TIMEOUT = 30    # seconds
 
 
 class NWClient(SavesetsMixin, NWPoliciesMixin):
@@ -68,6 +69,7 @@ class NWClient(SavesetsMixin, NWPoliciesMixin):
 
     def _request_with_retry(self, method: str, url: str, **kwargs) -> requests.Response:
         """Send an HTTP request, retrying transient failures with exponential backoff."""
+        kwargs.setdefault("timeout", _DEFAULT_TIMEOUT)
         last_resp: requests.Response | None = None
         last_exc: Exception | None = None
         for attempt in range(_MAX_RETRIES + 1):

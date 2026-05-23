@@ -67,9 +67,15 @@ def main() -> int:
             progress = (activity.get("stats") or {}).get("percentComplete", 0)
             print(f"  [{state}] {progress}% complete")
 
-            if state in ("SUCCEEDED", "FAILED", "CANCELED"):
+            if state in {"SUCCEEDED", "FAILED", "CANCELED", "SKIPPED", "OK_WITH_ERRORS"}:
                 if state == "SUCCEEDED":
                     print("Backup completed successfully.")
+                    return 0
+                elif state == "SKIPPED":
+                    print("Backup skipped — no changes since last backup.")
+                    return 0
+                elif state == "OK_WITH_ERRORS":
+                    print("Backup completed with errors — check activity details in PPDM.")
                     return 0
                 else:
                     error = (activity.get("result") or {}).get("error", {})

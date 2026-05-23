@@ -9,6 +9,102 @@ You are an expert in Dell EMC **NetWorker** and **PowerProtect Data Manager (PPD
 
 ---
 
+## ⚡ Quick Reference — Top Failure Patterns
+
+Read this section first. For simple triage questions this is sufficient; the full reference follows below.
+
+### PPDM — Top 10 Failure Patterns
+
+| Symptom | Likely cause | First command to run |
+|---|---|---|
+| Activity state `FAILED`, error contains `vProxy` | vProxy host unreachable or agent not registered | `backupctl doctor` → vProxy section; verify network + `GET /api/v2/inventory-sources` |
+| `Lockbox access denied` / credential error | Password rotated, lockbox not updated | `GET /api/v2/credentials` — identify stale credential; update via `PUT /api/v2/credentials/<id>` |
+| Storage unit full / `no space available` | DD filesystem at capacity | `GET /api/v2/storage-systems` — check `capacity.usedPercentage`; `backupctl dd status` |
+| Activity `OK_WITH_ERRORS` on every run | App agent error on one asset; policy silently continues | `GET /api/v2/activities/<id>` — read `subTasks[].error.message` |
+| Job stuck in `RUNNING` for > 4 h | Dead agent process or network partition | `GET /api/v2/activities?filter=state eq "RUNNING"` → `POST /api/v2/activities/<id>/cancel` |
+| Asset shows `COMPLIANCE_FAILED` | SLA window too narrow or backup not completed in window | `GET /api/v2/assets/<id>` — check `lastProtectionInfo`; review policy schedule |
+| Kubernetes namespace not discovered | RBAC missing or CDI not installed | Check `GET /api/v2/inventory-sources` — status field; verify `velero`/CDI pods in namespace |
+| `Token expired` / `401 Unauthorized` | Bearer token > 8 h old | Re-POST `/api/v2/login`; if using client, call `_ensure_auth()` |
+| Replication activity failing | Network / replication partner connectivity | `GET /api/v2/protection-policies/<id>` — check `replication.target`; test DD-to-DD link |
+| Cloud tier error / `cloud credentials invalid` | Cloud credential rotation | `GET /api/v2/credentials?filter=type eq "CLOUD"` — identify; update via PUT |
+
+### PPDM — Key API Endpoints (copy-paste ready)
+
+```bash
+BASE="https://<ppdm>:8443/api/v2"
+TOKEN=$(curl -sk -X POST $BASE/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"<pass>"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+H="Authorization: Bearer $TOKEN"
+
+# Failed jobs (last 24 h)
+curl -sk -H "$H" "$BASE/activities?filter=state%20eq%20%22FAILED%22%20and%20classType%20eq%20%22JOB%22&pageSize=50" | python3 -m json.tool
+
+# Single activity detail (sub-task errors)
+curl -sk -H "$H" "$BASE/activities/<ACTIVITY_ID>" | python3 -c "import sys,json; d=json.load(sys.stdin); [print(s.get('error',{}).get('message','')) for s in d.get('subTasks',[])]"
+
+# Storage capacity
+curl -sk -H "$H" "$BASE/storage-systems" | python3 -c "import sys,json; [print(s['name'], s['capacity']['usedPercentage'],'%') for s in json.load(sys.stdin).get('content',[])]"
+
+# Critical alerts
+curl -sk -H "$H" "$BASE/alerts?filter=severity%20eq%20%22CRITICAL%22" | python3 -m json.tool
+
+# Cancel a stuck job
+curl -sk -X POST -H "$H" "$BASE/activities/<ACTIVITY_ID>/cancel"
+
+# System health score
+curl -sk -H "$H" "$BASE/system-health"
+```
+
+### NetWorker — Top 8 Failure Patterns
+
+| Symptom | Likely cause | First command |
+|---|---|---|
+| `no space left on device` | Volume pool full | `mminfo -s <server> -mv` — check utilization; add AFTD capacity or expire old volumes |
+| Backup fails `peer not recognized` | NSR peer / auth mismatch after hostname change | `nsradmin -s <server> -e 'print type: NSR peer'` — delete stale entry, re-auth |
+| Client backup never starts | `nsrexecd` not running on client | `ssh <client> "ps aux | grep nsrexecd"` — start with `nsrexecd` or `systemctl start networker` |
+| "Waiting for media" indefinitely | No writable volume in target pool | `nsrwatch` — find the device; `nsrjb -s <server> -I` — inventory jukebox |
+| Recover fails `saveset not found` | Saveset browsed past expiry | `mminfo -s <server> -q "client=<host>,savetime>01/01/2024" -r "ssid,name,level,savetime,sumsize"` |
+| License exceeded | Too many protected hosts | `nsrlic -s <server>` — list consumption by feature |
+| Daemon not responding | `nsrd` crash | `service networker status`; check `/nsr/logs/daemon.log` for crash reason |
+| Full backup not found for incremental chain | Level Full expired before incremental | Query `mminfo -q "level=full,client=<host>"` — if missing, force a Full: `savegrp -G <group> -l full` |
+
+### NetWorker — Key CLI (copy-paste ready)
+
+```bash
+# Query failed savesets in last 24 h
+mminfo -s <server> -q "savetime>last 24 hours" -r "client,name,level,savetime(22),sumsize,ssid,completionMessage" | grep -v "completed successfully"
+
+# Show client resource (check backup-enabled, save-set, group)
+nsradmin -s <server> -e 'print type: NSR client; name: <hostname>'
+
+# Render raw daemon log
+nsr_render_log /nsr/logs/daemon.raw | grep -E "(error|fail|warn)" | tail -50
+
+# Force a group to run
+savegrp -G <group>
+
+# Expire a volume immediately
+nsrmm -s <server> -d <volume_name>
+
+# List all pools and their volumes
+mminfo -s <server> -mv
+```
+
+### Data Domain — Quick Checks
+
+```bash
+# DDBoost status
+backupctl dd status
+
+# Via SSH
+ssh admin@<dd_host> "filesys show space"     # filesystem capacity
+ssh admin@<dd_host> "ddboost status"         # DDBoost service status
+ssh admin@<dd_host> "replication show all"   # replication pair status
+```
+
+---
+
 ## When to Use
 
 - Configuring or managing NetWorker servers, storage nodes, clients, and devices
