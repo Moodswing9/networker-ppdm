@@ -96,6 +96,7 @@ def ask(
     top_k: int = typer.Option(5, "--top-k", help="Context chunks to retrieve"),
     skill: str = typer.Option("SKILL.md", "--skill", help="Path to SKILL.md"),
     rebuild: bool = typer.Option(False, "--rebuild", help="Force rebuild of vector index"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show retrieved context passages"),
 ):
     """Ask a NetWorker/PPDM question answered by RAG over SKILL.md.
 
@@ -114,6 +115,17 @@ def ask(
 
     pipeline = RagPipeline(skill_path=skill)
     pipeline.build_index(force=rebuild)
+
+    if verbose:
+        hits = pipeline.retrieve(question, top_k=top_k)
+        print(f"[dim]── {len(hits)} retrieved passage(s) ──[/dim]")
+        for i, h in enumerate(hits, 1):
+            preview = h["text"][:280].rstrip()
+            ellipsis = "…" if len(h["text"]) > 280 else ""
+            print(f"[dim][{i}] {h['heading']}[/dim]")
+            print(f"[dim]{preview}{ellipsis}[/dim]")
+            print()
+
     answer = pipeline.ask(question, top_k=top_k)
     print(Markdown(answer))
 
