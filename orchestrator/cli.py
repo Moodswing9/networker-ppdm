@@ -13,6 +13,7 @@ from rich.table import Table
 from orchestrator.doctor import run_doctor
 from orchestrator.inventory import run_inventory
 from orchestrator.protect import run_protect
+from orchestrator.sla import run_sla
 from providers.datadomain import DataDomainProvider
 
 app = typer.Typer(help="Unified CLI for PPDM, NetWorker, and Data Domain")
@@ -63,6 +64,19 @@ def protect(
     """Trigger a PPDM policy backup or NetWorker group backup."""
     result = run_protect(provider=provider, target=target)
     print(json.dumps(result, indent=2, default=str))
+
+
+@app.command()
+def sla(
+    hours: int = typer.Option(24, "--hours", "-h", help="Look-back window in hours"),
+    format: str = typer.Option("table", "--format", help="table or json"),
+):
+    """Show per-policy protection job SLA compliance."""
+    rows = run_sla(hours=hours)
+    if format == "json":
+        print(json.dumps(rows, indent=2, default=str))
+        return
+    _print_table(rows)
 
 
 dd_app = typer.Typer(help="Data Domain commands")
