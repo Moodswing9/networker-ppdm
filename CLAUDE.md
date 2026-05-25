@@ -17,6 +17,7 @@ pip install -r requirements.txt
 backupctl doctor      # health check across PPDM + NetWorker + Data Domain
 backupctl inventory   # list all assets and protection status
 backupctl protect     # trigger on-demand protection
+backupctl sla         # per-policy SLA % over a rolling window (--hours, --format)
 
 # Or via python -m
 python -m orchestrator.cli doctor
