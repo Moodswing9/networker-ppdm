@@ -1,40 +1,33 @@
-"""Generate automation scripts using NVIDIA Qwen2.5-Coder via NIM."""
+"""Generate automation scripts using Claude Opus 4.7."""
 
 from __future__ import annotations
 
-import os
+import anthropic
 
-from openai import OpenAI
+_MODEL = "claude-opus-4-7"
 
-_MODEL = "qwen/qwen2.5-coder-32b-instruct"
+_SYSTEM_PROMPT = (
+    "You are an expert Dell EMC NetWorker and PowerProtect Data Manager (PPDM) "
+    "automation engineer. Generate clean, production-ready Python or bash scripts "
+    "that interact with the NetWorker REST API or PPDM REST API. "
+    "Include error handling, logging, and comments only where the logic is non-obvious. "
+    "Return only the script — no markdown fences, no prose."
+)
 
 
 def generate_script(description: str) -> str:
     """Return a Python or bash script matching the given description.
 
-    Uses Qwen2.5-Coder-32B for accurate data-protection domain code generation.
-    Set NVIDIA_API_KEY in your environment before calling.
+    Uses Claude Opus 4.7 with adaptive thinking for accurate data-protection
+    domain code generation. Set ANTHROPIC_API_KEY in your environment.
     """
-    client = OpenAI(
-        base_url="https://integrate.api.nvidia.com/v1",
-        api_key=os.environ["NVIDIA_API_KEY"],
-    )
+    client = anthropic.Anthropic()
 
-    system_prompt = (
-        "You are an expert Dell EMC NetWorker and PowerProtect Data Manager (PPDM) "
-        "automation engineer. Generate clean, production-ready Python or bash scripts "
-        "that interact with the NetWorker REST API or PPDM REST API. "
-        "Include error handling, logging, and comments only where the logic is non-obvious. "
-        "Return only the script — no markdown fences, no prose."
-    )
-
-    resp = client.chat.completions.create(
+    msg = client.messages.create(
         model=_MODEL,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": description},
-        ],
-        temperature=0.1,
         max_tokens=2048,
+        thinking={"type": "adaptive"},
+        system=_SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": description}],
     )
-    return resp.choices[0].message.content or ""
+    return next((b.text for b in msg.content if b.type == "text"), "")

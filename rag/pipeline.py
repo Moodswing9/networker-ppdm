@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
-from openai import OpenAI
+import anthropic
 
 from rag.chunker import load_chunks
 from rag.embedder import embed
 from rag.retriever import VectorStore
 
-_LLM_MODEL = "nvidia/llama-3.1-nemotron-70b-instruct"
+_LLM_MODEL = "claude-opus-4-7"
 _CACHE_FILE = ".rag_index.json"
 
 
@@ -43,16 +42,13 @@ class RagPipeline:
         return self._store.query(query_vec, top_k=top_k)
 
     def ask(self, question: str, top_k: int = 5) -> str:
-        """Answer a question using retrieved context + Nemotron 70B."""
+        """Answer a question using retrieved context + Claude Opus 4.7."""
         hits = self.retrieve(question, top_k=top_k)
         context = "\n\n---\n\n".join(
             f"[{h['heading']}]\n{h['text']}" for h in hits
         )
 
-        client = OpenAI(
-            base_url="https://integrate.api.nvidia.com/v1",
-            api_key=os.environ["NVIDIA_API_KEY"],
-        )
+        client = anthropic.Anthropic()
 
         system_prompt = (
             "You are an expert Dell EMC NetWorker and PPDM administrator. "
@@ -61,13 +57,11 @@ class RagPipeline:
         )
         user_prompt = f"Context:\n{context}\n\nQuestion: {question}"
 
-        resp = client.chat.completions.create(
+        msg = client.messages.create(
             model=_LLM_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            temperature=0.2,
             max_tokens=1024,
+            thinking={"type": "adaptive"},
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_prompt}],
         )
-        return resp.choices[0].message.content or ""
+        return next((b.text for b in msg.content if b.type == "text"), "")

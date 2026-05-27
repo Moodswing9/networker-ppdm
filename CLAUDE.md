@@ -53,7 +53,7 @@ networker-ppdm/
 │   ├── doctor.py            # Health check logic
 │   ├── inventory.py         # Asset inventory
 │   ├── protect.py           # On-demand protection
-│   └── generate.py          # AI script generator (Qwen2.5-Coder via NIM)
+│   └── generate.py          # AI script generator (Claude Opus 4.7)
 ├── rag/                     # RAG pipeline
 │   ├── pipeline.py          # RagPipeline — build index, retrieve, answer
 │   ├── chunker.py           # Load + chunk SKILL.md into passages
@@ -102,7 +102,7 @@ NetWorker REST API v2 (`https://<host>:9090/nwrestapi/v3`). Similar mixin patter
 
 ## RAG Pipeline
 
-Chunks `skills/networker-ppdm/SKILL.md` into passages → embeds with NVIDIA NIM (`nvidia/llama-3.2-nemoretriever-300m-embed-v1`) → stores in in-memory `VectorStore` → retrieves top-K on query → answers with NVIDIA NIM (`nvidia/llama-3.1-nemotron-70b-instruct`).
+Chunks `skills/networker-ppdm/SKILL.md` into passages → embeds with NVIDIA NIM (`nvidia/llama-3.2-nemoretriever-300m-embed-v1`) → stores in in-memory `VectorStore` → retrieves top-K on query → answers with **Claude Opus 4.7** (adaptive thinking).
 
 Cache saved to `.rag_index.json` — auto-invalidated when `SKILL.md` is modified (mtime check).
 
@@ -142,4 +142,5 @@ Slash commands:
 | `PPDM_HOST` | scripts, orchestrator commands |
 | `PPDM_USER` / `PPDM_PASS` | scripts, orchestrator commands |
 | `NW_HOST` / `NW_USER` / `NW_PASS` | NetWorker client |
-| `NVIDIA_API_KEY` | RAG embedder + RAG LLM + script generator |
+| `NVIDIA_API_KEY` | RAG embedder (NIM NemoRetriever — embeddings only) |
+| `ANTHROPIC_API_KEY` | RAG LLM (Claude Opus 4.7) + script generator |
