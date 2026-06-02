@@ -169,8 +169,8 @@ backupctl generate "Python script that triggers PPDM backups for all K8s namespa
 
 Install as a plugin to get the skill, four slash commands, and a specialist agent inline in Claude Code:
 
-```
-/plugin install Moodswing9/networker-ppdm
+```bash
+npx skills add Moodswing9/networker-ppdm -g
 ```
 
 Once installed, you get:
