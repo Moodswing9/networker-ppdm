@@ -178,6 +178,7 @@ Once installed, you get:
 | Component | What it does |
 |:---|:---|
 | **`networker-ppdm` skill** | Auto-activates when you ask about NetWorker, PPDM, Data Domain, or backup/restore operations. |
+| **`/networker-ask`** | Ask any NetWorker/PPDM question — answered by Claude Opus 4.7 using the domain knowledge base. |
 | **`/ppdm-doctor`** | Cross-product health check across PPDM + NetWorker + Data Domain. |
 | **`/ppdm-failed-jobs`** | Reports failed PPDM activities with root-cause hints. CI-friendly exit code. |
 | **`/ppdm-sla`** | SLA compliance report — surfaces non-compliant assets with remediation suggestions. |

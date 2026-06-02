@@ -30,5 +30,12 @@
     "skills": ["./skills/networker-ppdm"],
     "commands": ["./commands"],
     "agents": ["./agents"]
+  },
+  "commands": {
+    "networker-ask": "commands/networker-ask.md",
+    "ppdm-backup": "commands/ppdm-backup.md",
+    "ppdm-doctor": "commands/ppdm-doctor.md",
+    "ppdm-failed-jobs": "commands/ppdm-failed-jobs.md",
+    "ppdm-sla": "commands/ppdm-sla.md"
   }
 }

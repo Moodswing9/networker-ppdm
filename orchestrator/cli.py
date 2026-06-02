@@ -100,7 +100,7 @@ def ask(
 ):
     """Ask a NetWorker/PPDM question answered by RAG over SKILL.md.
 
-    Requires NVIDIA_API_KEY to be set in the environment.
+    Requires NVIDIA_API_KEY (NIM embeddings) and ANTHROPIC_API_KEY (Claude Opus 4.7 LLM).
     """
     try:
         from rag.pipeline import RagPipeline
@@ -136,9 +136,9 @@ def generate(
     output: str | None = typer.Option(None, "--output", "-o", help="Save script to file"),
     skill: str = typer.Option("SKILL.md", "--skill", help="Path to SKILL.md (unused, for parity)"),
 ):
-    """Generate a NetWorker/PPDM automation script using Qwen2.5-Coder-32B.
+    """Generate a NetWorker/PPDM automation script using Claude Opus 4.7.
 
-    Requires NVIDIA_API_KEY to be set in the environment.
+    Requires ANTHROPIC_API_KEY to be set in the environment.
     """
     try:
         from orchestrator.generate import generate_script
@@ -147,8 +147,8 @@ def generate(
         raise typer.Exit(1)
 
     import os
-    if not os.environ.get("NVIDIA_API_KEY"):
-        print("[red]NVIDIA_API_KEY is not set[/red]")
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        print("[red]ANTHROPIC_API_KEY is not set[/red]")
         raise typer.Exit(1)
 
     script = generate_script(description)
