@@ -4,7 +4,7 @@
 
 A Python package providing REST API clients, a unified `backupctl` CLI, automation scripts, a RAG pipeline, and a Claude Code plugin for Dell EMC **NetWorker**, **PowerProtect Data Manager (PPDM)**, and **Data Domain**.
 
-Installed as an editable package (`pip install -e .`). The Claude Code plugin registers 4 slash commands and a domain-expert skill.
+Installed as an editable package (`pip install -e .`). The Claude Code plugin registers 9 slash commands, 2 agents, and a domain-expert skill.
 
 ## Commands
 
@@ -26,6 +26,9 @@ python -m orchestrator.cli doctor
 python scripts/check_failed_jobs.py
 python scripts/ondemand_backup.py
 python scripts/sla_report.py
+python scripts/dr_orchestrate.py --incident "storage unit full"   # 4-agent DR pipeline
+python scripts/dr_plan.py --incident "storage unit full"          # extended thinking DR plan
+python scripts/anomaly_report.py --wait                           # Haiku batch anomaly detection
 
 # RAG pipeline (Q&A over SKILL.md)
 python -m rag.pipeline "How do I protect a Kubernetes namespace in PPDM?"
@@ -63,12 +66,18 @@ networker-ppdm/
 │   └── datadomain.py        # Data Domain provider (REST)
 ├── scripts/                 # Standalone automation scripts
 ├── agents/
-│   └── backup-engineer.md   # Agent prompt for autonomous backup ops
-├── commands/                # Claude Code slash commands
-│   ├── ppdm-backup.md       # /ppdm-backup
-│   ├── ppdm-doctor.md       # /ppdm-doctor
-│   ├── ppdm-failed-jobs.md  # /ppdm-failed-jobs
-│   └── ppdm-sla.md          # /ppdm-sla
+│   ├── backup-engineer.md         # Deep-dive troubleshooting agent (Claude Opus 4.7)
+│   └── backup-health-monitor.md   # Autonomous daily digest agent (CRITICAL/WARNING/INFO)
+├── commands/                  # Claude Code slash commands
+│   ├── networker-ask.md       # /networker-ask
+│   ├── ppdm-backup.md         # /ppdm-backup
+│   ├── ppdm-doctor.md         # /ppdm-doctor
+│   ├── ppdm-failed-jobs.md    # /ppdm-failed-jobs
+│   ├── ppdm-sla.md            # /ppdm-sla
+│   ├── dr-orchestrate.md      # /dr-orchestrate — 4-agent DR pipeline
+│   ├── dr-plan.md             # /dr-plan — extended thinking DR planner
+│   ├── anomaly-report.md      # /anomaly-report — Haiku batch anomaly detection
+│   └── networker-report.md    # /networker-report — weekly NetWorker summary
 ├── skills/
 │   └── networker-ppdm/
 │       └── SKILL.md         # Domain-expert skill definition
@@ -121,10 +130,22 @@ npx skills add Moodswing9/networker-ppdm -g
 Slash commands:
 | Command | What it does |
 |---|---|
+| `/networker-ask` | Plain-English Q&A over the NetWorker/PPDM skill |
 | `/ppdm-backup` | Trigger on-demand PPDM protection job |
 | `/ppdm-doctor` | Run health check and surface critical issues |
 | `/ppdm-failed-jobs` | List and summarise failed jobs in the last 24 h |
 | `/ppdm-sla` | Generate SLA compliance report |
+| `/dr-orchestrate` | 4-agent DR pipeline: Monitor → Diagnose → Remediate → Validate |
+| `/dr-plan` | Extended thinking DR plan with RPO/RTO awareness |
+| `/anomaly-report` | Haiku batch anomaly detection — classifies jobs NORMAL/ANOMALOUS/DEGRADING |
+| `/networker-report` | Weekly NetWorker summary: success rates, compliance, recommendations |
+
+Agents:
+
+| Agent | What it does |
+|---|---|
+| `backup-engineer` | Deep-dive troubleshooting across PPDM + NetWorker + Data Domain |
+| `backup-health-monitor` | Autonomous daily digest — sweeps all products, CRITICAL/WARNING/INFO severity |
 
 ## Key Constraints
 
