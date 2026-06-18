@@ -1,6 +1,6 @@
 {
   "name": "networker-ppdm",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "description": "Expert guidance and automation for Dell EMC NetWorker, PowerProtect Data Manager (PPDM), and Data Domain — REST API clients, unified backupctl CLI, slash commands, and a 105-test validated skill.",
   "author": {
     "name": "Moodswing9",
@@ -42,6 +42,7 @@
     "ppdm-sla":         "commands/ppdm-sla.md",
     "dr-orchestrate":   "commands/dr-orchestrate.md",
     "dr-plan":          "commands/dr-plan.md",
-    "anomaly-report":   "commands/anomaly-report.md"
+    "anomaly-report":     "commands/anomaly-report.md",
+    "networker-report":   "commands/networker-report.md"
   }
 }
