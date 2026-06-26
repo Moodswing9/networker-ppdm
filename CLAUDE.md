@@ -139,6 +139,7 @@ Slash commands:
 | `/dr-plan` | Extended thinking DR plan with RPO/RTO awareness |
 | `/anomaly-report` | Haiku batch anomaly detection — classifies jobs NORMAL/ANOMALOUS/DEGRADING |
 | `/networker-report` | Weekly NetWorker summary: success rates, compliance, recommendations |
+| `/ppdm-restore` | Guided restore wizard — browse assets, pick copy, choose target, confirm, trigger + monitor |
 
 Agents:
 
