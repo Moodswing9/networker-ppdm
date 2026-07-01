@@ -140,6 +140,7 @@ Slash commands:
 | `/anomaly-report` | Haiku batch anomaly detection — classifies jobs NORMAL/ANOMALOUS/DEGRADING |
 | `/networker-report` | Weekly NetWorker summary: success rates, compliance, recommendations |
 | `/ppdm-restore` | Guided restore wizard — browse assets, pick copy, choose target, confirm, trigger + monitor |
+| `/backup-report` | Cross-platform executive report — PPDM + NetWorker + Data Domain in one summary |
 
 Agents:
 
