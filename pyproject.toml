@@ -34,6 +34,7 @@ include = ["ppdm*", "networker*", "datadomain*", "orchestrator*", "providers*", 
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]
 addopts = "-v --tb=short"
+pythonpath = ["."]
 
 [tool.coverage.run]
 source = ["ppdm", "networker", "datadomain"]
