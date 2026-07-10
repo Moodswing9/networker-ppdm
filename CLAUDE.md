@@ -4,7 +4,7 @@
 
 A Python package providing REST API clients, a unified `backupctl` CLI, automation scripts, a RAG pipeline, and a Claude Code plugin for Dell EMC **NetWorker**, **PowerProtect Data Manager (PPDM)**, and **Data Domain**.
 
-Installed as an editable package (`pip install -e .`). The Claude Code plugin registers 9 slash commands, 2 agents, and a domain-expert skill.
+Installed as an editable package (`pip install -e .`). The Claude Code plugin registers 12 slash commands, 2 agents, and a domain-expert skill.
 
 ## Commands
 
@@ -77,7 +77,10 @@ networker-ppdm/
 │   ├── dr-orchestrate.md      # /dr-orchestrate — 4-agent DR pipeline
 │   ├── dr-plan.md             # /dr-plan — extended thinking DR planner
 │   ├── anomaly-report.md      # /anomaly-report — Haiku batch anomaly detection
-│   └── networker-report.md    # /networker-report — weekly NetWorker summary
+│   ├── networker-report.md    # /networker-report — weekly NetWorker summary
+│   ├── ppdm-restore.md        # /ppdm-restore — guided PPDM restore wizard
+│   ├── backup-report.md       # /backup-report — cross-platform executive report
+│   └── nw-restore.md          # /nw-restore — NetWorker saveset restore wizard
 ├── skills/
 │   └── networker-ppdm/
 │       └── SKILL.md         # Domain-expert skill definition
@@ -141,6 +144,7 @@ Slash commands:
 | `/networker-report` | Weekly NetWorker summary: success rates, compliance, recommendations |
 | `/ppdm-restore` | Guided restore wizard — browse assets, pick copy, choose target, confirm, trigger + monitor |
 | `/backup-report` | Cross-platform executive report — PPDM + NetWorker + Data Domain in one summary |
+| `/nw-restore` | NetWorker saveset restore wizard — browse clients, pick saveset, original or alternate path, trigger + report |
 
 Agents:
 
