@@ -52,6 +52,25 @@ class RestoresMixin:
         """Return current state and progress of a restore job."""
         return self._get(f"/restores/{restore_id}")
 
+    def list_restores(self, state: str | None = None, page_size: int = 20) -> list[dict]:
+        """List restore sessions, optionally filtered by state.
+
+        Args:
+            state:      Optional state filter — "RUNNING", "COMPLETED", "FAILED", "CANCELED".
+            page_size:  Max results to return (default 20).
+        """
+        params: dict = {"pageSize": page_size, "orderby": "startTime DESC"}
+        if state:
+            params["filter"] = f'state eq "{state}"'
+        response = self._get("/restores", params=params)
+        if isinstance(response, dict):
+            return response.get("content", [])
+        return response if isinstance(response, list) else []
+
+    def cancel_restore(self, restore_id: str) -> None:
+        """Cancel a running restore session."""
+        self._delete(f"/restores/{restore_id}")
+
     def restore_to_new(
         self,
         copy_id: str,
