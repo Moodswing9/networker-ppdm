@@ -4,7 +4,7 @@
 
 A Python package providing REST API clients, a unified `backupctl` CLI, automation scripts, a RAG pipeline, and a Claude Code plugin for Dell EMC **NetWorker**, **PowerProtect Data Manager (PPDM)**, and **Data Domain**.
 
-Installed as an editable package (`pip install -e .`). The Claude Code plugin registers 12 slash commands, 2 agents, and a domain-expert skill.
+Installed as an editable package (`pip install -e .`). The Claude Code plugin registers 13 slash commands, 2 agents, and a domain-expert skill.
 
 ## Commands
 
@@ -50,7 +50,7 @@ networker-ppdm/
 │   ├── activities.py        # ActivitiesMixin — jobs, OData filters
 │   ├── assets.py            # AssetsMixin — list/filter assets by type
 │   ├── policies.py          # PoliciesMixin — protection rules
-│   └── restores.py          # RestoresMixin — restore operations
+│   └── restores.py          # RestoresMixin — restore operations + list_restores() + cancel_restore()
 ├── orchestrator/            # Unified CLI
 │   ├── cli.py               # Typer app — command definitions
 │   ├── doctor.py            # Health check logic
@@ -80,7 +80,8 @@ networker-ppdm/
 │   ├── networker-report.md    # /networker-report — weekly NetWorker summary
 │   ├── ppdm-restore.md        # /ppdm-restore — guided PPDM restore wizard
 │   ├── backup-report.md       # /backup-report — cross-platform executive report
-│   └── nw-restore.md          # /nw-restore — NetWorker saveset restore wizard
+│   ├── nw-restore.md          # /nw-restore — NetWorker saveset restore wizard
+│   └── restore-monitor.md     # /restore-monitor — list/inspect/cancel PPDM restore sessions
 ├── skills/
 │   └── networker-ppdm/
 │       └── SKILL.md         # Domain-expert skill definition
@@ -145,6 +146,7 @@ Slash commands:
 | `/ppdm-restore` | Guided restore wizard — browse assets, pick copy, choose target, confirm, trigger + monitor |
 | `/backup-report` | Cross-platform executive report — PPDM + NetWorker + Data Domain in one summary |
 | `/nw-restore` | NetWorker saveset restore wizard — browse clients, pick saveset, original or alternate path, trigger + report |
+| `/restore-monitor` | List active/recent PPDM restore sessions, inspect by ID, or cancel a running session |
 
 Agents:
 
