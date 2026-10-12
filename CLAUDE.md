@@ -126,9 +126,10 @@ python -m rag.pipeline "What CLI command lists failed NetWorker savesets?"
 
 ## Claude Code Plugin
 
-Install globally:
+Install via the Moodswing9 marketplace (`npx skills add` installs only the skill, not the commands or agents):
 ```bash
-npx skills add Moodswing9/networker-ppdm -g
+claude plugin marketplace add Moodswing9/claude-plugins
+claude plugin install networker-ppdm@moodswing9
 ```
 
 Slash commands:

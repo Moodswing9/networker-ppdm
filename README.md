@@ -4,7 +4,7 @@
 
 **Python REST API clients, unified CLI, automation scripts, and a Claude Code skill for Dell EMC NetWorker, PowerProtect Data Manager, and Data Domain**
 
-[![Version](https://img.shields.io/badge/version-3.3.0-6366f1?style=flat-square)](https://github.com/Moodswing9/networker-ppdm/releases)
+[![Version](https://img.shields.io/badge/version-3.3.1-6366f1?style=flat-square)](https://github.com/Moodswing9/networker-ppdm/releases)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/Moodswing9/networker-ppdm/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/Moodswing9/networker-ppdm/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.9%2B-3b82f6?style=flat-square)](#)
@@ -169,9 +169,18 @@ backupctl generate "Python script that triggers PPDM backups for all K8s namespa
 
 Install as a plugin to get the skill, 13 slash commands and 2 agents inline in Claude Code:
 
+From a terminal:
+
 ```bash
-npx skills add Moodswing9/networker-ppdm -g
+claude plugin marketplace add Moodswing9/claude-plugins
+claude plugin install networker-ppdm@moodswing9
 ```
+
+This installs the skill, all 13 slash commands and both agents.
+
+Or inside Claude Code: `/plugin marketplace add Moodswing9/claude-plugins`, then `/plugin install networker-ppdm@moodswing9`.
+
+Only need the knowledge skill, without the slash commands? `npx skills add Moodswing9/networker-ppdm -g` installs just the skill.
 
 Once installed, you get:
 

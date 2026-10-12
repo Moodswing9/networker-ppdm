@@ -1,17 +1,15 @@
 {
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "networker-ppdm",
-  "version": "3.3.0",
+  "version": "3.3.1",
   "description": "Expert guidance and automation for Dell EMC NetWorker, PowerProtect Data Manager (PPDM), and Data Domain — REST API clients, unified backupctl CLI, slash commands, and a 105-test validated skill.",
   "author": {
     "name": "Moodswing9",
     "url": "https://github.com/Moodswing9"
   },
   "homepage": "https://github.com/Moodswing9/networker-ppdm",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Moodswing9/networker-ppdm.git"
-  },
-  "license": "SEE LICENSE IN LICENSE",
+  "repository": "https://github.com/Moodswing9/networker-ppdm",
+  "license": "MIT",
   "keywords": [
     "dell-emc",
     "networker",
@@ -28,25 +26,5 @@
     "disaster-recovery",
     "anomaly-detection",
     "multi-agent"
-  ],
-  "components": {
-    "skills": ["./skills/networker-ppdm"],
-    "commands": ["./commands"],
-    "agents": ["./agents"]
-  },
-  "commands": {
-    "networker-ask":    "commands/networker-ask.md",
-    "ppdm-backup":      "commands/ppdm-backup.md",
-    "ppdm-doctor":      "commands/ppdm-doctor.md",
-    "ppdm-failed-jobs": "commands/ppdm-failed-jobs.md",
-    "ppdm-sla":         "commands/ppdm-sla.md",
-    "dr-orchestrate":   "commands/dr-orchestrate.md",
-    "dr-plan":          "commands/dr-plan.md",
-    "anomaly-report":     "commands/anomaly-report.md",
-    "networker-report":   "commands/networker-report.md",
-    "ppdm-restore":       "commands/ppdm-restore.md",
-    "backup-report":      "commands/backup-report.md",
-    "nw-restore":         "commands/nw-restore.md",
-    "restore-monitor":    "commands/restore-monitor.md"
-  }
+  ]
 }
