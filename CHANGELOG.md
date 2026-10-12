@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.3.1] — 2026-10-12
+### Fixed
+- Claude Code plugin manifest passes `claude plugin validate`: `repository` is a URL, `license` is MIT and the unsupported `components` field is gone; the invalid `commands` map was removed; all 13 commands and both agents load from their default folders
+- Install docs: the plugin is now installed from the Moodswing9 marketplace (`claude plugin marketplace add Moodswing9/claude-plugins`, then `claude plugin install networker-ppdm@moodswing9`). The previously documented `npx skills add` installs only the skill, not the slash commands
+
+### Added
+- CI validates the plugin manifest on every push and pull request
+
 ## [3.3.0] — 2026-07-16
 ### Added
 - `/restore-monitor` — list active and recent PPDM restore sessions, check one by ID, or cancel a running restore (asks for CONFIRM). 13 slash commands in total
