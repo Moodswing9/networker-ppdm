@@ -4,7 +4,7 @@
 
 **Python REST API clients, unified CLI, automation scripts, and a Claude Code skill for Dell EMC NetWorker, PowerProtect Data Manager, and Data Domain**
 
-[![Version](https://img.shields.io/badge/version-3.2.0-6366f1?style=flat-square)](https://github.com/Moodswing9/networker-ppdm/releases)
+[![Version](https://img.shields.io/badge/version-3.3.0-6366f1?style=flat-square)](https://github.com/Moodswing9/networker-ppdm/releases)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/Moodswing9/networker-ppdm/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/Moodswing9/networker-ppdm/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.9%2B-3b82f6?style=flat-square)](#)
@@ -167,7 +167,7 @@ backupctl generate "Python script that triggers PPDM backups for all K8s namespa
 
 ## Claude Code Plugin
 
-Install as a plugin to get the skill, four slash commands, and a specialist agent inline in Claude Code:
+Install as a plugin to get the skill, 13 slash commands and 2 agents inline in Claude Code:
 
 ```bash
 npx skills add Moodswing9/networker-ppdm -g
@@ -179,11 +179,42 @@ Once installed, you get:
 |:---|:---|
 | **`networker-ppdm` skill** | Auto-activates when you ask about NetWorker, PPDM, Data Domain, or backup/restore operations. |
 | **`/networker-ask`** | Ask any NetWorker/PPDM question — answered by Claude Opus 4.7 using the domain knowledge base. |
-| **`/ppdm-doctor`** | Cross-product health check across PPDM + NetWorker + Data Domain. |
-| **`/ppdm-failed-jobs`** | Reports failed PPDM activities with root-cause hints. CI-friendly exit code. |
-| **`/ppdm-sla`** | SLA compliance report — surfaces non-compliant assets with remediation suggestions. |
-| **`/ppdm-backup`** | Trigger on-demand PPDM backup, optionally polling until completion. |
-| **`backup-engineer` agent** | Senior-level deep-dive agent for complex multi-product troubleshooting. Use via the Agent tool with `subagent_type: "backup-engineer"`. |
+
+**Health and reporting**
+
+| Command | What it does |
+|:---|:---|
+| **`/ppdm-doctor`** | Cross-product health check across PPDM, NetWorker and Data Domain, drilling into failures automatically. |
+| **`/ppdm-failed-jobs`** | Lists failed PPDM activities with root-cause hints. CI-friendly exit code. |
+| **`/ppdm-sla`** | SLA compliance report — surfaces non-compliant assets with their recent job history. |
+| **`/networker-report`** | Weekly NetWorker summary — saveset success rates, failed clients, data volume and policy compliance. |
+| **`/backup-report`** | Cross-platform executive report combining PPDM, NetWorker and Data Domain, with prioritised action items. |
+| **`/anomaly-report`** | Flags anomalous, degrading and failed jobs over a history window using the Claude Batch API. |
+
+**Backup and restore**
+
+| Command | What it does |
+|:---|:---|
+| **`/ppdm-backup`** | Trigger an on-demand PPDM backup, validating the asset and policy first, optionally polling until completion. |
+| **`/ppdm-restore`** | Guided PPDM restore wizard — pick an asset, a recovery copy and a target, confirm, and watch it run. |
+| **`/nw-restore`** | Guided NetWorker saveset restore wizard — pick a client, a saveset and a target path, confirm, and trigger. |
+| **`/restore-monitor`** | List active and recent PPDM restore sessions, check one by ID, or cancel a running restore. |
+
+**Disaster recovery**
+
+| Command | What it does |
+|:---|:---|
+| **`/dr-orchestrate`** | Four specialist Claude agents triage, diagnose, remediate and validate a DR response, ending in a Go/No-Go verdict. |
+| **`/dr-plan`** | Full DR plan from your live PPDM topology using Claude Opus 4.7 extended thinking, with the reasoning exported for audit. |
+
+**Agents**
+
+| Agent | What it does |
+|:---|:---|
+| **`backup-engineer`** | Senior-level deep-dive agent for complex multi-product troubleshooting. Use via the Agent tool with `subagent_type: "backup-engineer"`. |
+| **`backup-health-monitor`** | Runs a full environment sweep and produces a daily digest with severity-ranked action items. |
+
+The restore wizards ask for explicit confirmation before restoring to the original location, and `/restore-monitor` asks before canceling a restore.
 
 > **Requirements:** [Claude Code](https://claude.com/claude-code) 1.0.33+. Python 3.10+ on the machine running the slash commands (for the underlying scripts).
 
