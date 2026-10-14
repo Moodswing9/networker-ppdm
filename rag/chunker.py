@@ -5,8 +5,12 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+# The skill lives where the Claude Code plugin expects it; resolve it from the
+# package, not the cwd, so `backupctl ask` works from any directory.
+DEFAULT_SKILL_PATH = Path(__file__).resolve().parent.parent / "skills" / "networker-ppdm" / "SKILL.md"
 
-def load_chunks(skill_path: str | Path = "SKILL.md", max_chars: int = 800) -> list[dict]:
+
+def load_chunks(skill_path: str | Path = DEFAULT_SKILL_PATH, max_chars: int = 800) -> list[dict]:
     """Return list of {heading, text} dicts from a Markdown file.
 
     Splits on level-2 headings (##). Chunks exceeding max_chars are split

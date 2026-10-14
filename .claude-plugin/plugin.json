@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "networker-ppdm",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "Expert guidance and automation for Dell EMC NetWorker, PowerProtect Data Manager (PPDM), and Data Domain — REST API clients, unified backupctl CLI, slash commands, and a 105-test validated skill.",
   "author": {
     "name": "Moodswing9",

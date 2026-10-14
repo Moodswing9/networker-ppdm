@@ -6,7 +6,7 @@ from pathlib import Path
 
 import anthropic
 
-from rag.chunker import load_chunks
+from rag.chunker import DEFAULT_SKILL_PATH, load_chunks
 from rag.embedder import embed
 from rag.retriever import VectorStore
 
@@ -15,7 +15,7 @@ _CACHE_FILE = ".rag_index.json"
 
 
 class RagPipeline:
-    def __init__(self, skill_path: str = "SKILL.md") -> None:
+    def __init__(self, skill_path: str | Path = DEFAULT_SKILL_PATH) -> None:
         self._skill_path = skill_path
         self._store = VectorStore()
 
