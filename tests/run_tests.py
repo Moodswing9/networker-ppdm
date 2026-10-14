@@ -38,7 +38,7 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
 
 # ── Paths ──────────────────────────────────────────────────────────────────
 ROOT = Path(__file__).parent.parent
-SKILL_FILE = ROOT / "SKILL.md"
+SKILL_FILE = ROOT / "skills" / "networker-ppdm" / "SKILL.md"
 TESTS_FILE = Path(__file__).parent / "test_cases.yaml"
 
 # ── Config ─────────────────────────────────────────────────────────────────

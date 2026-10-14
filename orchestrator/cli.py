@@ -15,6 +15,7 @@ from orchestrator.inventory import run_inventory
 from orchestrator.protect import run_protect
 from orchestrator.sla import run_sla
 from providers.datadomain import DataDomainProvider
+from rag.chunker import DEFAULT_SKILL_PATH
 
 app = typer.Typer(help="Unified CLI for PPDM, NetWorker, and Data Domain")
 
@@ -94,7 +95,7 @@ def dd_status():
 def ask(
     question: str = typer.Argument(..., help="Question about NetWorker or PPDM"),
     top_k: int = typer.Option(5, "--top-k", help="Context chunks to retrieve"),
-    skill: str = typer.Option("SKILL.md", "--skill", help="Path to SKILL.md"),
+    skill: str = typer.Option(str(DEFAULT_SKILL_PATH), "--skill", help="Path to SKILL.md"),
     rebuild: bool = typer.Option(False, "--rebuild", help="Force rebuild of vector index"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show retrieved context passages"),
 ):
@@ -134,7 +135,7 @@ def ask(
 def generate(
     description: str = typer.Argument(..., help="Script description in plain English"),
     output: str | None = typer.Option(None, "--output", "-o", help="Save script to file"),
-    skill: str = typer.Option("SKILL.md", "--skill", help="Path to SKILL.md (unused, for parity)"),
+    skill: str = typer.Option(str(DEFAULT_SKILL_PATH), "--skill", help="Path to SKILL.md (unused, for parity)"),
 ):
     """Generate a NetWorker/PPDM automation script using Claude Opus 4.7.
 
