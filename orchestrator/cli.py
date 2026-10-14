@@ -105,8 +105,8 @@ def ask(
     """
     try:
         from rag.pipeline import RagPipeline
-    except ImportError:
-        print("[red]openai package required — run: pip install openai>=1.0[/red]")
+    except ImportError as exc:
+        print(f"[red]{exc.name} package required — run: pip install {exc.name}[/red]")
         raise typer.Exit(1)
 
     import os
@@ -143,8 +143,8 @@ def generate(
     """
     try:
         from orchestrator.generate import generate_script
-    except ImportError:
-        print("[red]openai package required — run: pip install openai>=1.0[/red]")
+    except ImportError as exc:
+        print(f"[red]{exc.name} package required — run: pip install {exc.name}[/red]")
         raise typer.Exit(1)
 
     import os

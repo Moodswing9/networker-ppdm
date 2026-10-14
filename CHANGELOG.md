@@ -3,7 +3,8 @@
 ## [3.3.2] — 2026-10-14
 ### Fixed
 - `backupctl ask` and the skill validation runner (`tests/run_tests.py`) looked for `SKILL.md` in the repo root, which has been empty since the skill moved to `skills/networker-ppdm/` in the plugin packaging. `ask` failed with `FileNotFoundError` unless `--skill` was passed, and the runner exited before running a test. Both now default to `skills/networker-ppdm/SKILL.md`, resolved from the package, so they work from any directory
-- README test counts: 68 unit tests, 110 skill validation cases
+- `backupctl ask` and `generate` said "openai package required" when the missing package was `anthropic`; the message now names the package that is actually missing
+- README test counts: 69 unit tests, 110 skill validation cases
 
 ### Added
 - Unit tests for the default skill path (CLI, RAG pipeline, chunker, runner)

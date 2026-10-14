@@ -5,6 +5,8 @@ from __future__ import annotations
 import inspect
 from pathlib import Path
 
+import pytest
+
 from rag.chunker import DEFAULT_SKILL_PATH, load_chunks
 
 
@@ -20,13 +22,18 @@ def test_load_chunks_default_works_from_any_cwd(tmp_path, monkeypatch):
     assert all(c["heading"] for c in chunks)
 
 
-def test_pipeline_and_cli_default_to_plugin_skill():
+def test_cli_defaults_to_plugin_skill():
     from orchestrator import cli
+
+    ask_default = inspect.signature(cli.ask).parameters["skill"].default.default
+    assert Path(ask_default) == DEFAULT_SKILL_PATH
+
+
+def test_pipeline_defaults_to_plugin_skill():
+    pytest.importorskip("anthropic")  # optional AI extra, not in the dev deps
     from rag.pipeline import RagPipeline
 
     assert RagPipeline()._skill_path == DEFAULT_SKILL_PATH
-    ask_default = inspect.signature(cli.ask).parameters["skill"].default.default
-    assert Path(ask_default) == DEFAULT_SKILL_PATH
 
 
 def test_skill_test_runner_points_at_plugin_skill():

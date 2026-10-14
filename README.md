@@ -247,7 +247,7 @@ Two suites — one for the Python library, one for the Claude Code skill.
 
 ```bash
 pip install -e ".[dev]"
-python -m pytest tests/unit/          # 68 tests, fully mocked
+python -m pytest tests/unit/          # 69 tests, fully mocked
 ```
 
 ### Skill Validation Tests
