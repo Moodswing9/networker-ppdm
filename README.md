@@ -4,7 +4,7 @@
 
 **Python REST API clients, unified CLI, automation scripts, and a Claude Code skill for Dell EMC NetWorker, PowerProtect Data Manager, and Data Domain**
 
-[![Version](https://img.shields.io/badge/version-3.3.2-6366f1?style=flat-square)](https://github.com/Moodswing9/networker-ppdm/releases)
+[![Version](https://img.shields.io/badge/version-3.3.3-6366f1?style=flat-square)](https://github.com/Moodswing9/networker-ppdm/releases)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/Moodswing9/networker-ppdm/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/Moodswing9/networker-ppdm/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.9%2B-3b82f6?style=flat-square)](#)
@@ -214,7 +214,7 @@ Once installed, you get:
 | Command | What it does |
 |:---|:---|
 | **`/dr-orchestrate`** | Four specialist Claude agents triage, diagnose, remediate and validate a DR response, ending in a Go/No-Go verdict. |
-| **`/dr-plan`** | Full DR plan from your live PPDM topology using Claude Opus 4.7 extended thinking, with the reasoning exported for audit. |
+| **`/dr-plan`** | Full DR plan from your live PPDM topology using Claude Opus 4.7 adaptive thinking, with a summary of the reasoning saved for review. |
 
 **Agents**
 
@@ -247,7 +247,7 @@ Two suites — one for the Python library, one for the Claude Code skill.
 
 ```bash
 pip install -e ".[dev]"
-python -m pytest tests/unit/          # 69 tests, fully mocked
+python -m pytest tests/unit/          # 71 tests, fully mocked
 ```
 
 ### Skill Validation Tests

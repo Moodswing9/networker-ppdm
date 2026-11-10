@@ -1,9 +1,9 @@
 """
 Extended-thinking DR planner.
 
-Feeds PPDM topology into Claude Opus 4.7 with a high thinking budget
-and generates a comprehensive DR plan.  The raw thinking chain is
-saved to dr_plan_thinking.md for operator audit.
+Feeds PPDM topology into Claude Opus 4.7 with adaptive thinking at high
+effort and generates a comprehensive DR plan.  A summary of the model's
+reasoning is saved to dr_plan_thinking.md for operator audit.
 
 Usage:
   python scripts/dr_plan.py [--rpo <hours>] [--rto <hours>] [--json]
@@ -18,9 +18,17 @@ from pathlib import Path
 import anthropic
 from ppdm.client import PPDMClient
 
-_MODEL          = "claude-opus-4-7"
-_THINKING_BUDGET = 8000
-_MAX_OUTPUT     = 4096
+_MODEL      = "claude-opus-4-7"
+_EFFORT     = "high"
+# Thinking and the plan share max_tokens; 16k leaves room for both and stays
+# under the SDK's non-streaming timeout.
+_MAX_TOKENS = 16000
+
+# Opus 4.7 rejects {"type": "enabled", "budget_tokens": N} with a 400; adaptive
+# thinking plus output_config.effort replaces it. Its thinking display defaults
+# to "omitted" (empty text), so ask for a summary to fill the audit sidecar.
+THINKING      = {"type": "adaptive", "display": "summarized"}
+OUTPUT_CONFIG = {"effort": _EFFORT}
 
 
 def _topology() -> dict:
@@ -64,8 +72,9 @@ def run(rpo_hours: int = 24, rto_hours: int = 4, json_output: bool = False) -> d
 
     msg = client.messages.create(
         model=_MODEL,
-        max_tokens=_MAX_OUTPUT + _THINKING_BUDGET,
-        thinking={"type": "enabled", "budget_tokens": _THINKING_BUDGET},
+        max_tokens=_MAX_TOKENS,
+        thinking=THINKING,
+        output_config=OUTPUT_CONFIG,
         system=(
             "You are a senior disaster recovery architect specialising in Dell EMC "
             "PowerProtect Data Manager and NetWorker. Apply methodical DR planning: "
@@ -75,15 +84,16 @@ def run(rpo_hours: int = 24, rto_hours: int = 4, json_output: bool = False) -> d
         messages=[{"role": "user", "content": prompt}],
     )
 
-    plan, thinking = "", ""
-    for block in msg.content:
-        if block.type == "thinking":
-            thinking = block.thinking
-        elif block.type == "text":
-            plan = block.text
+    thinking = "\n\n".join(b.thinking for b in msg.content if b.type == "thinking" and b.thinking)
+    plan     = "\n\n".join(b.text for b in msg.content if b.type == "text")
+    if msg.stop_reason == "max_tokens":
+        print("[dr-plan] Warning: output hit max_tokens; the plan may be cut off.", file=sys.stderr)
 
     sidecar = Path("dr_plan_thinking.md")
-    sidecar.write_text(f"# DR Plan — Extended Thinking\n\n{thinking}\n")
+    sidecar.write_text(
+        f"# DR Plan — Reasoning Summary\n\n{thinking or '(no reasoning summary returned)'}\n",
+        encoding="utf-8",
+    )
 
     result = {
         "rpo_hours": rpo_hours,

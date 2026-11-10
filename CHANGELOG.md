@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.3.3] — 2026-11-10
+### Fixed
+- `/dr-plan` (`scripts/dr_plan.py`) failed on every run: it requested `thinking: {type: "enabled", budget_tokens: 8000}`, which Claude Opus 4.7 rejects with HTTP 400 ("thinking.type.enabled is not supported for this model"). It now uses adaptive thinking with `output_config.effort: "high"` and `max_tokens` 16000
+- `dr_plan_thinking.md` would have been empty even with a working request, because Opus 4.7 omits thinking text unless asked; the request now sets `display: "summarized"`. Docs no longer promise the "full extended thinking chain": current Claude models return a summary of their reasoning, never the raw chain
+- `dr_plan.py` writes the sidecar as UTF-8, joins every text block of the plan, and warns when the output hits `max_tokens`
+- CLAUDE.md showed `dr_plan.py --incident`, a flag the script does not have; it now shows `--rpo` / `--rto`
+
+### Added
+- Unit tests for the `dr_plan` request (adaptive thinking, effort, summarized display, sidecar content); 71 unit tests in total
+
 ## [3.3.2] — 2026-10-14
 ### Fixed
 - `backupctl ask` and the skill validation runner (`tests/run_tests.py`) looked for `SKILL.md` in the repo root, which has been empty since the skill moved to `skills/networker-ppdm/` in the plugin packaging. `ask` failed with `FileNotFoundError` unless `--skill` was passed, and the runner exited before running a test. Both now default to `skills/networker-ppdm/SKILL.md`, resolved from the package, so they work from any directory
