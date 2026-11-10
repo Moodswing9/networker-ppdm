@@ -27,7 +27,7 @@ python scripts/check_failed_jobs.py
 python scripts/ondemand_backup.py
 python scripts/sla_report.py
 python scripts/dr_orchestrate.py --incident "storage unit full"   # 4-agent DR pipeline
-python scripts/dr_plan.py --incident "storage unit full"          # extended thinking DR plan
+python scripts/dr_plan.py --rpo 24 --rto 4                        # adaptive thinking DR plan
 python scripts/anomaly_report.py --wait                           # Haiku batch anomaly detection
 
 # RAG pipeline (Q&A over SKILL.md)
@@ -75,7 +75,7 @@ networker-ppdm/
 │   ├── ppdm-failed-jobs.md    # /ppdm-failed-jobs
 │   ├── ppdm-sla.md            # /ppdm-sla
 │   ├── dr-orchestrate.md      # /dr-orchestrate — 4-agent DR pipeline
-│   ├── dr-plan.md             # /dr-plan — extended thinking DR planner
+│   ├── dr-plan.md             # /dr-plan — adaptive thinking DR planner
 │   ├── anomaly-report.md      # /anomaly-report — Haiku batch anomaly detection
 │   ├── networker-report.md    # /networker-report — weekly NetWorker summary
 │   ├── ppdm-restore.md        # /ppdm-restore — guided PPDM restore wizard
@@ -141,7 +141,7 @@ Slash commands:
 | `/ppdm-failed-jobs` | List and summarise failed jobs in the last 24 h |
 | `/ppdm-sla` | Generate SLA compliance report |
 | `/dr-orchestrate` | 4-agent DR pipeline: Monitor → Diagnose → Remediate → Validate |
-| `/dr-plan` | Extended thinking DR plan with RPO/RTO awareness |
+| `/dr-plan` | Adaptive thinking DR plan with RPO/RTO awareness; reasoning summary saved for review |
 | `/anomaly-report` | Haiku batch anomaly detection — classifies jobs NORMAL/ANOMALOUS/DEGRADING |
 | `/networker-report` | Weekly NetWorker summary: success rates, compliance, recommendations |
 | `/ppdm-restore` | Guided restore wizard — browse assets, pick copy, choose target, confirm, trigger + monitor |

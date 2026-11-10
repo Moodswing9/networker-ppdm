@@ -1,5 +1,5 @@
 ---
-description: Generate a comprehensive Disaster Recovery plan using Claude Opus 4.7 extended thinking — surfaces full reasoning chain for operator audit
+description: Generate a comprehensive Disaster Recovery plan using Claude Opus 4.7 adaptive thinking — saves a summary of the model's reasoning for operator review
 argument-hint: "[--rpo <hours>] [--rto <hours>] [--json]"
 allowed-tools: ["Bash", "Read"]
 ---
@@ -20,9 +20,9 @@ If output is `NO_ENV_FILE`, stop and ask the operator to configure `.env`.
 python scripts/dr_plan.py $ARGUMENTS 2>&1
 ```
 
-This feeds live PPDM topology (assets, policies, recent failures) into Claude Opus 4.7 with `budget_tokens=8000` of extended thinking. Default: `--rpo 24 --rto 4`. Pass overrides as needed.
+This feeds live PPDM topology (assets, policies, recent failures) into Claude Opus 4.7 with adaptive thinking at `high` effort. Default: `--rpo 24 --rto 4`. Pass overrides as needed.
 
-The thinking chain is automatically saved to `dr_plan_thinking.md`.
+A summary of the model's reasoning is automatically saved to `dr_plan_thinking.md`.
 
 ## Step 3 — Present the plan in five sections
 
@@ -34,11 +34,11 @@ Structure the output clearly with headers:
 4. **Gap Analysis** — assets and failure scenarios not covered by current policies
 5. **Policy Recommendations** — specific changes needed to meet stated RPO/RTO
 
-## Step 4 — Offer the thinking transcript
+## Step 4 — Offer the reasoning summary
 
 Inform the operator:
 
-> `dr_plan_thinking.md` contains Claude's full extended thinking chain. Run `cat dr_plan_thinking.md` to audit the decision logic before executing the runbook.
+> `dr_plan_thinking.md` contains a summary of Claude's reasoning, not the full thinking (current Claude models never return their raw reasoning). Use it to review the decision logic, and verify the runbook steps themselves before executing them.
 
 If the operator asks to see the thinking, run:
 
