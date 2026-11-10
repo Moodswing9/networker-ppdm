@@ -1,7 +1,7 @@
 ---
 name: backup-engineer
 description: Deep-dive Dell EMC backup engineer. Use for complex troubleshooting that spans PPDM + NetWorker + Data Domain, multi-step restores, Kubernetes namespace recovery, replication topology design, or DDBoost / cloud tier optimization. Loads the full networker-ppdm skill context and operates with extended reasoning.
-model: claude-opus-4-7
+model: claude-opus-5-5
 tools: ["Bash", "Read", "Grep", "Glob", "Edit", "Write", "WebFetch"]
 ---
 

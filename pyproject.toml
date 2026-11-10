@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "networker-ppdm"
-version = "3.3.3"
+version = "3.4.0"
 description = "Python clients and automation scripts for Dell EMC NetWorker, PPDM, and Data Domain"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -23,7 +23,7 @@ dev = [
     "responses>=0.25",      # HTTP mock for requests
 ]
 skill-tests = [
-    "anthropic>=0.84",
+    "anthropic>=2.7",
     "pyyaml>=6.0",
 ]
 

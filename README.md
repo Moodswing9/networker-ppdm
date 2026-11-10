@@ -4,7 +4,7 @@
 
 **Python REST API clients, unified CLI, automation scripts, and a Claude Code skill for Dell EMC NetWorker, PowerProtect Data Manager, and Data Domain**
 
-[![Version](https://img.shields.io/badge/version-3.3.3-6366f1?style=flat-square)](https://github.com/Moodswing9/networker-ppdm/releases)
+[![Version](https://img.shields.io/badge/version-3.4.0-6366f1?style=flat-square)](https://github.com/Moodswing9/networker-ppdm/releases)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/Moodswing9/networker-ppdm/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/Moodswing9/networker-ppdm/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.9%2B-3b82f6?style=flat-square)](#)
@@ -126,14 +126,14 @@ backupctl generate "Python script that lists all PPDM policies older than 30 day
 | `backupctl inventory` | Combined PPDM + NetWorker inventory output |
 | `backupctl protect` | Trigger a PPDM policy or NetWorker protection group backup |
 | `backupctl dd status` | Inspect Data Domain status and filesystem details |
-| `backupctl ask` | Plain-English Q&A over SKILL.md — RAG-powered, answered by Claude Opus 4.7 |
-| `backupctl generate` | Generate NetWorker/PPDM automation scripts with Claude Opus 4.7 |
+| `backupctl ask` | Plain-English Q&A over SKILL.md — RAG-powered, answered by Claude Opus 5.5 |
+| `backupctl generate` | Generate NetWorker/PPDM automation scripts with Claude Opus 5.5 |
 
 ---
 
 ## AI Features
 
-Powered by **Claude Opus 4.7** (adaptive thinking) for Q&A and script generation. Embeddings use NVIDIA NIM NemoRetriever for vector search.
+Powered by **Claude Opus 5.5** (adaptive thinking) for Q&A and script generation. Embeddings use NVIDIA NIM NemoRetriever for vector search.
 
 ### `backupctl ask` — RAG over SKILL.md
 
@@ -142,7 +142,7 @@ Asks NetWorker/PPDM questions in plain English. The pipeline:
 1. **Chunks** SKILL.md by H2 heading (`rag/chunker.py`)
 2. **Embeds** each chunk with `nvidia/llama-3.2-nemoretriever-300m-embed-v1` (`rag/embedder.py`)
 3. **Stores** vectors in an in-memory cosine-similarity index, cached as `.rag_index.json` (`rag/retriever.py`)
-4. **Retrieves** the top-K chunks for the user's question, then asks `claude-opus-4-7` (adaptive thinking) to answer using only that context (`rag/pipeline.py`)
+4. **Retrieves** the top-K chunks for the user's question, then asks `claude-opus-5-5` (adaptive thinking) to answer using only that context (`rag/pipeline.py`)
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
@@ -154,14 +154,14 @@ backupctl ask "..." --rebuild   # force rebuild of vector index
 
 ### `backupctl generate` — Domain-Aware Script Generation
 
-Generates production-ready Python or bash scripts targeting the NetWorker/PPDM REST APIs. Uses **`claude-opus-4-7`** (adaptive thinking) with a system prompt that constrains output to clean, error-handled, log-aware code (`orchestrator/generate.py`).
+Generates production-ready Python or bash scripts targeting the NetWorker/PPDM REST APIs. Uses **`claude-opus-5-5`** (adaptive thinking) with a system prompt that constrains output to clean, error-handled, log-aware code (`orchestrator/generate.py`).
 
 ```bash
 backupctl generate "Bash script that nightly reports DD storage units over 80% full"
 backupctl generate "Python script that triggers PPDM backups for all K8s namespaces" -o backup_all_ns.py
 ```
 
-> **Requirements for AI features:** `pip install anthropic>=0.40` and `ANTHROPIC_API_KEY` set in the environment. `NVIDIA_API_KEY` is still required for the NemoRetriever embedding step in `backupctl ask`.
+> **Requirements for AI features:** `pip install "anthropic>=2.7"` and `ANTHROPIC_API_KEY` set in the environment. `NVIDIA_API_KEY` is still required for the NemoRetriever embedding step in `backupctl ask`.
 
 ---
 
@@ -187,7 +187,7 @@ Once installed, you get:
 | Component | What it does |
 |:---|:---|
 | **`networker-ppdm` skill** | Auto-activates when you ask about NetWorker, PPDM, Data Domain, or backup/restore operations. |
-| **`/networker-ask`** | Ask any NetWorker/PPDM question — answered by Claude Opus 4.7 using the domain knowledge base. |
+| **`/networker-ask`** | Ask any NetWorker/PPDM question — answered by Claude Opus 5.5 using the domain knowledge base. |
 
 **Health and reporting**
 
@@ -214,7 +214,7 @@ Once installed, you get:
 | Command | What it does |
 |:---|:---|
 | **`/dr-orchestrate`** | Four specialist Claude agents triage, diagnose, remediate and validate a DR response, ending in a Go/No-Go verdict. |
-| **`/dr-plan`** | Full DR plan from your live PPDM topology using Claude Opus 4.7 adaptive thinking, with a summary of the reasoning saved for review. |
+| **`/dr-plan`** | Full DR plan from your live PPDM topology using Claude Opus 5.5 adaptive thinking, with a summary of the reasoning saved for review. |
 
 **Agents**
 
@@ -247,7 +247,7 @@ Two suites — one for the Python library, one for the Claude Code skill.
 
 ```bash
 pip install -e ".[dev]"
-python -m pytest tests/unit/          # 71 tests, fully mocked
+python -m pytest tests/unit/          # 82 tests, fully mocked
 ```
 
 ### Skill Validation Tests
@@ -282,7 +282,7 @@ python tests/run_tests.py --output results.json
 
 ```
 networker-ppdm skill test runner
-Model  : claude-haiku-4-5-20251001
+Model  : claude-haiku-5-5
 Tests  : 105
 
   ✓ [ppdm_auth]         How do I authenticate to the PPDM REST API...

@@ -1,5 +1,5 @@
 ---
-description: Ask any NetWorker or PPDM question — answered by Claude Opus 4.7 using relevant sections from the domain knowledge base
+description: Ask any NetWorker or PPDM question — answered by Claude Opus 5.5 using relevant sections from the domain knowledge base
 argument-hint: '"Your question about NetWorker, PPDM, or Data Domain"'
 allowed-tools: ["Bash", "Read", "Glob"]
 ---
@@ -46,10 +46,12 @@ QUESTION     = """<substitute question here>"""
 SKILL_CONTENT = """<substitute full SKILL.md content here>"""
 
 client = anthropic.Anthropic()
+# Opus 5.5 always thinks; thinking shares max_tokens with the answer.
+# extra_body works with any installed anthropic version (older ones lack output_config).
 with client.messages.stream(
-    model='claude-opus-4-7',
-    max_tokens=1024,
-    thinking={'type': 'adaptive'},
+    model='claude-opus-5-5',
+    max_tokens=8000,
+    extra_body={'output_config': {'effort': 'high'}},
     system=[{
         'type': 'text',
         'text': (
@@ -66,7 +68,12 @@ with client.messages.stream(
 ) as stream:
     for text in stream.text_stream:
         print(text, end='', flush=True)
+    final = stream.get_final_message()
 print()
+if final.stop_reason == 'refusal':
+    print('Claude declined to answer this question.')
+elif final.stop_reason == 'max_tokens':
+    print('Note: the answer was cut off at the length limit.')
 PYEOF
 ```
 

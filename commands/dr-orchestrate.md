@@ -20,7 +20,7 @@ If output is `NO_ENV_FILE` or placeholder values, stop and ask the operator to c
 python scripts/dr_orchestrate.py $ARGUMENTS 2>&1
 ```
 
-Four Claude Opus 4.7 agents run sequentially — each receives the previous agent's output as context:
+Four Claude Opus 5.5 agents run sequentially — each receives the previous agent's output as context:
 
 1. **Monitor** — collects live PPDM state (failed/running jobs, asset count) and triages severity
 2. **Diagnose** — performs root cause analysis, identifies primary cause and up to three contributing factors

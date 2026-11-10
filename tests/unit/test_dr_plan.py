@@ -30,7 +30,9 @@ def dr_plan(monkeypatch, tmp_path):
             )
 
     stub = types.ModuleType("anthropic")
-    stub.Anthropic = lambda *a, **k: SimpleNamespace(messages=_Messages())
+    # dr_plan calls the beta endpoint (refusal fallbacks); a call to the plain
+    # endpoint would fail here, since it has no create().
+    stub.Anthropic = lambda *a, **k: SimpleNamespace(beta=SimpleNamespace(messages=_Messages()))
     monkeypatch.setitem(sys.modules, "anthropic", stub)
     sys.modules.pop("scripts.dr_plan", None)
     module = importlib.import_module("scripts.dr_plan")
@@ -47,6 +49,14 @@ def test_uses_adaptive_thinking_not_budget_tokens(dr_plan):
     assert kwargs["thinking"]["type"] == "adaptive"
     assert "budget_tokens" not in kwargs["thinking"]
     assert kwargs["output_config"] == {"effort": "high"}
+
+
+def test_targets_opus_5_5_with_refusal_fallback(dr_plan):
+    module, calls, _ = dr_plan
+    module.run()
+    assert calls[0]["model"] == "claude-opus-5-5"
+    assert calls[0]["fallbacks"] == "default"
+    assert "server-side-fallback-2026-07-01" in calls[0]["betas"]
 
 
 def test_requests_summarized_thinking_for_the_audit_sidecar(dr_plan):
