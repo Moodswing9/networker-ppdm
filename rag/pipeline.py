@@ -6,11 +6,11 @@ from pathlib import Path
 
 import anthropic
 
+from orchestrator.claude_models import OPUS, OPUS_FALLBACK, text_of
 from rag.chunker import DEFAULT_SKILL_PATH, load_chunks
 from rag.embedder import embed
 from rag.retriever import VectorStore
 
-_LLM_MODEL = "claude-opus-4-7"
 _CACHE_FILE = ".rag_index.json"
 
 
@@ -42,7 +42,7 @@ class RagPipeline:
         return self._store.query(query_vec, top_k=top_k)
 
     def ask(self, question: str, top_k: int = 5) -> str:
-        """Answer a question using retrieved context + Claude Opus 4.7."""
+        """Answer a question using retrieved context + Claude Opus 5.5."""
         hits = self.retrieve(question, top_k=top_k)
         context = "\n\n---\n\n".join(
             f"[{h['heading']}]\n{h['text']}" for h in hits
@@ -57,11 +57,12 @@ class RagPipeline:
         )
         user_prompt = f"Context:\n{context}\n\nQuestion: {question}"
 
-        msg = client.messages.create(
-            model=_LLM_MODEL,
-            max_tokens=1024,
-            thinking={"type": "adaptive"},
+        msg = client.beta.messages.create(
+            model=OPUS,
+            max_tokens=8000,  # thinking and the answer share it
+            output_config={"effort": "high"},
+            **OPUS_FALLBACK,
             system=system_prompt,
             messages=[{"role": "user", "content": user_prompt}],
         )
-        return next((b.text for b in msg.content if b.type == "text"), "")
+        return text_of(msg)

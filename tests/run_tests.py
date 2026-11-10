@@ -42,7 +42,10 @@ SKILL_FILE = ROOT / "skills" / "networker-ppdm" / "SKILL.md"
 TESTS_FILE = Path(__file__).parent / "test_cases.yaml"
 
 # ── Config ─────────────────────────────────────────────────────────────────
-MODEL = "claude-haiku-4-5-20251001"   # fast + cheap for test validation
+MODEL = "claude-haiku-5-5"   # fast + cheap for test validation
+# Haiku 5.5 thinks by default; the validator never did, so keep it off
+# (allowed at effort high or below) to keep runs fast and cheap.
+NO_THINKING = {"thinking": {"type": "disabled"}, "output_config": {"effort": "low"}}
 MAX_TOKENS = 2048
 RETRY_ATTEMPTS = 4
 RETRY_DELAY = 65  # seconds to wait after a rate limit hit (limit resets per minute)
@@ -107,6 +110,7 @@ def ask_claude(client: anthropic.Anthropic, system_blocks: list, prompt: str) ->
             message = client.messages.create(
                 model=MODEL,
                 max_tokens=MAX_TOKENS,
+                extra_body=NO_THINKING,  # works on any installed anthropic version
                 system=system_blocks,
                 messages=[{"role": "user", "content": prompt}],
             )
@@ -116,7 +120,8 @@ def ask_claude(client: anthropic.Anthropic, system_blocks: list, prompt: str) ->
                 "cache_creation_tokens": getattr(message.usage, "cache_creation_input_tokens", 0),
                 "cache_read_tokens":     getattr(message.usage, "cache_read_input_tokens", 0),
             }
-            return message.content[0].text, usage
+            text = "".join(b.text for b in message.content if b.type == "text")
+            return text, usage
         except anthropic.RateLimitError:
             if attempt < RETRY_ATTEMPTS:
                 print(f"    {YELLOW}Rate limited — waiting {RETRY_DELAY}s (attempt {attempt}/{RETRY_ATTEMPTS}){RESET}")

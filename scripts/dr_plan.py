@@ -1,7 +1,7 @@
 """
 Extended-thinking DR planner.
 
-Feeds PPDM topology into Claude Opus 4.7 with adaptive thinking at high
+Feeds PPDM topology into Claude Opus 5.5 with adaptive thinking at high
 effort and generates a comprehensive DR plan.  A summary of the model's
 reasoning is saved to dr_plan_thinking.md for operator audit.
 
@@ -16,17 +16,18 @@ import sys
 from pathlib import Path
 
 import anthropic
+from orchestrator.claude_models import OPUS, OPUS_FALLBACK, text_of
 from ppdm.client import PPDMClient
 
-_MODEL      = "claude-opus-4-7"
+_MODEL      = OPUS
 _EFFORT     = "high"
 # Thinking and the plan share max_tokens; 16k leaves room for both and stays
 # under the SDK's non-streaming timeout.
 _MAX_TOKENS = 16000
 
-# Opus 4.7 rejects {"type": "enabled", "budget_tokens": N} with a 400; adaptive
-# thinking plus output_config.effort replaces it. Its thinking display defaults
-# to "omitted" (empty text), so ask for a summary to fill the audit sidecar.
+# Opus 4.7 and later reject {"type": "enabled", "budget_tokens": N} with a 400;
+# adaptive thinking plus output_config.effort replaces it. The thinking display
+# defaults to "omitted" (empty text), so ask for a summary to fill the sidecar.
 THINKING      = {"type": "adaptive", "display": "summarized"}
 OUTPUT_CONFIG = {"effort": _EFFORT}
 
@@ -70,8 +71,9 @@ def run(rpo_hours: int = 24, rto_hours: int = 4, json_output: bool = False) -> d
         f"5. Recommended policy changes to meet the stated RPO/RTO targets\n"
     )
 
-    msg = client.messages.create(
+    msg = client.beta.messages.create(
         model=_MODEL,
+        **OPUS_FALLBACK,
         max_tokens=_MAX_TOKENS,
         thinking=THINKING,
         output_config=OUTPUT_CONFIG,
@@ -85,7 +87,7 @@ def run(rpo_hours: int = 24, rto_hours: int = 4, json_output: bool = False) -> d
     )
 
     thinking = "\n\n".join(b.thinking for b in msg.content if b.type == "thinking" and b.thinking)
-    plan     = "\n\n".join(b.text for b in msg.content if b.type == "text")
+    plan     = text_of(msg)  # raises ClaudeRefusal if Claude and the fallback declined
     if msg.stop_reason == "max_tokens":
         print("[dr-plan] Warning: output hit max_tokens; the plan may be cut off.", file=sys.stderr)
 

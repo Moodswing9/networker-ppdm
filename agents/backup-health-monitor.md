@@ -1,7 +1,7 @@
 ---
 name: backup-health-monitor
 description: Autonomous daily health monitor for PPDM + NetWorker + Data Domain. Runs a full environment sweep, classifies issues by severity, and produces a structured digest with actionable remediation steps. Use when you want a morning briefing on overnight backup health without asking questions.
-model: claude-opus-4-7
+model: claude-opus-5-5
 tools: ["Bash", "Read"]
 ---
 

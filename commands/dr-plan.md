@@ -1,5 +1,5 @@
 ---
-description: Generate a comprehensive Disaster Recovery plan using Claude Opus 4.7 adaptive thinking — saves a summary of the model's reasoning for operator review
+description: Generate a comprehensive Disaster Recovery plan using Claude Opus 5.5 adaptive thinking — saves a summary of the model's reasoning for operator review
 argument-hint: "[--rpo <hours>] [--rto <hours>] [--json]"
 allowed-tools: ["Bash", "Read"]
 ---
@@ -20,7 +20,7 @@ If output is `NO_ENV_FILE`, stop and ask the operator to configure `.env`.
 python scripts/dr_plan.py $ARGUMENTS 2>&1
 ```
 
-This feeds live PPDM topology (assets, policies, recent failures) into Claude Opus 4.7 with adaptive thinking at `high` effort. Default: `--rpo 24 --rto 4`. Pass overrides as needed.
+This feeds live PPDM topology (assets, policies, recent failures) into Claude Opus 5.5 with adaptive thinking at `high` effort. Default: `--rpo 24 --rto 4`. Pass overrides as needed.
 
 A summary of the model's reasoning is automatically saved to `dr_plan_thinking.md`.
 

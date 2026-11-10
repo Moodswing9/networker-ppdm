@@ -101,7 +101,7 @@ def ask(
 ):
     """Ask a NetWorker/PPDM question answered by RAG over SKILL.md.
 
-    Requires NVIDIA_API_KEY (NIM embeddings) and ANTHROPIC_API_KEY (Claude Opus 4.7 LLM).
+    Requires NVIDIA_API_KEY (NIM embeddings) and ANTHROPIC_API_KEY (Claude Opus 5.5 LLM).
     """
     try:
         from rag.pipeline import RagPipeline
@@ -137,7 +137,7 @@ def generate(
     output: str | None = typer.Option(None, "--output", "-o", help="Save script to file"),
     skill: str = typer.Option(str(DEFAULT_SKILL_PATH), "--skill", help="Path to SKILL.md (unused, for parity)"),
 ):
-    """Generate a NetWorker/PPDM automation script using Claude Opus 4.7.
+    """Generate a NetWorker/PPDM automation script using Claude Opus 5.5.
 
     Requires ANTHROPIC_API_KEY to be set in the environment.
     """

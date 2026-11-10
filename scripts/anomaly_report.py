@@ -19,9 +19,12 @@ import time
 from datetime import datetime, timedelta, timezone
 
 import anthropic
+from orchestrator.claude_models import HAIKU, HAIKU_NO_THINKING
 from ppdm.client import PPDMClient
 
-_MODEL         = "claude-haiku-4-5-20251001"
+# Haiku 5.5 thinks by default; this classifier never did, and thinking would use
+# up its 256-token budget, so it stays off (allowed at effort high or below).
+_MODEL         = HAIKU
 _POLL_INTERVAL = 30
 _MAX_WAIT      = 86_400
 
@@ -69,6 +72,7 @@ def _build_requests(activities: list[dict]) -> list[dict]:
             "params": {
                 "model":      _MODEL,
                 "max_tokens": 256,
+                **HAIKU_NO_THINKING,
                 "system": (
                     "You are a backup anomaly classifier. Classify each backup activity as:\n"
                     "- NORMAL: completed successfully within expected parameters\n"
@@ -115,7 +119,9 @@ def _poll(client: anthropic.Anthropic, batch_id: str, wait: bool) -> str | None:
 def _collect(client: anthropic.Anthropic, batch_id: str) -> list[dict]:
     results = []
     for r in client.messages.batches.results(batch_id):
-        if r.result.type == "succeeded":
+        if r.result.type == "succeeded" and r.result.message.stop_reason == "refusal":
+            parsed = {"classification": "UNKNOWN", "reason": "Claude declined to classify this activity.", "risk_score": 0}
+        elif r.result.type == "succeeded":
             raw = next(
                 (b.text for b in r.result.message.content if b.type == "text"), ""
             )

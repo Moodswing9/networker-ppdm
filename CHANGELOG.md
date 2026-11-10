@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.4.0] — 2026-11-10
+### Changed
+- AI features move to the current Claude models: **Claude Opus 5.5** (`claude-opus-5-5`) for `backupctl ask`, `backupctl generate`, `/networker-ask`, `/dr-orchestrate`, `/dr-plan` and the two subagents, and **Claude Haiku 5.5** (`claude-haiku-5-5`) for `/anomaly-report` and the skill validation runner
+- Effort is set on every call, because Opus 5.5 always thinks and its default effort (`medium`) differs from before. Calls that already thought adaptively on Opus 4.7 keep `high`, the DR validator (which did not think) uses `low`, and the Haiku calls keep thinking off, so cost and speed stay in line with before while the per-token price drops (Opus $5/$25 → $4/$20, Haiku $1/$5 → $0.10/$0.50 per million tokens)
+- `max_tokens` raised where thinking now shares the limit with the answer (Q&A 1024 → 8000, generation and DR agents 2048–4096 → 16000)
+- Opus requests opt into server-side refusal fallback (`fallbacks: "default"`); a request that Claude and the fallback both decline raises a clear `ClaudeRefusal` error, and a declined anomaly classification is reported as UNKNOWN
+- `anthropic` requirement → `>=2.7` (API version `2026-10-21`)
+
+### Fixed
+- The skill validation runner read `content[0].text`, which breaks when a response starts with a thinking block; it now joins the text blocks
+
+### Added
+- `orchestrator/claude_models.py`: model IDs and request settings shared by every AI feature
+- Unit tests for the shared settings and the DR planner's endpoint and fallback (82 unit tests in total)
+
 ## [3.3.3] — 2026-11-10
 ### Fixed
 - `/dr-plan` (`scripts/dr_plan.py`) failed on every run: it requested `thinking: {type: "enabled", budget_tokens: 8000}`, which Claude Opus 4.7 rejects with HTTP 400 ("thinking.type.enabled is not supported for this model"). It now uses adaptive thinking with `output_config.effort: "high"` and `max_tokens` 16000

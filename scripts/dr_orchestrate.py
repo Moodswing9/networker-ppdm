@@ -18,16 +18,13 @@ import sys
 from typing import Any
 
 import anthropic
+from orchestrator.claude_models import OPUS, OPUS_FALLBACK, text_of as _text
 from ppdm.client import PPDMClient
 
-_MODEL = "claude-opus-4-7"
-
-
-def _text(msg: anthropic.types.Message) -> str:
-    for block in msg.content:
-        if block.type == "text":
-            return block.text
-    return ""
+# Agents 1-3 thought adaptively on Opus 4.7 and keep high effort; the validator
+# did not think, so low effort keeps its cost flat. Thinking shares max_tokens.
+_THINKING_AGENT = {"model": OPUS, "max_tokens": 16000, "output_config": {"effort": "high"}, **OPUS_FALLBACK}
+_VALIDATOR = {"model": OPUS, "max_tokens": 4000, "output_config": {"effort": "low"}, **OPUS_FALLBACK}
 
 
 def _collect_state() -> str:
@@ -56,9 +53,8 @@ def run(incident: str | None = None, json_output: bool = False) -> dict[str, Any
     state  = _collect_state()
 
     # ── Agent 1: Monitor ──────────────────────────────────────────────────────
-    m1 = client.messages.create(
-        model=_MODEL, max_tokens=2048,
-        thinking={"type": "adaptive"},
+    m1 = client.beta.messages.create(
+        **_THINKING_AGENT,
         system=(
             "You are a backup monitoring agent for Dell EMC PPDM and NetWorker. "
             "Analyse the current backup state and produce a concise triage report: "
@@ -69,9 +65,8 @@ def run(incident: str | None = None, json_output: bool = False) -> dict[str, Any
     )
 
     # ── Agent 2: Diagnose ─────────────────────────────────────────────────────
-    m2 = client.messages.create(
-        model=_MODEL, max_tokens=2048,
-        thinking={"type": "adaptive"},
+    m2 = client.beta.messages.create(
+        **_THINKING_AGENT,
         system=(
             "You are a backup root-cause analysis agent for Dell EMC environments. "
             "Identify the primary root cause and up to three contributing factors. "
@@ -82,9 +77,8 @@ def run(incident: str | None = None, json_output: bool = False) -> dict[str, Any
     )
 
     # ── Agent 3: Remediate ────────────────────────────────────────────────────
-    m3 = client.messages.create(
-        model=_MODEL, max_tokens=4096,
-        thinking={"type": "adaptive"},
+    m3 = client.beta.messages.create(
+        **_THINKING_AGENT,
         system=(
             "You are a backup remediation agent for Dell EMC PPDM and NetWorker. "
             "Generate a step-by-step recovery plan with copy-pasteable CLI commands "
@@ -95,8 +89,8 @@ def run(incident: str | None = None, json_output: bool = False) -> dict[str, Any
     )
 
     # ── Agent 4: Validate ─────────────────────────────────────────────────────
-    m4 = client.messages.create(
-        model=_MODEL, max_tokens=1024,
+    m4 = client.beta.messages.create(
+        **_VALIDATOR,
         system=(
             "You are a backup plan validation agent. Review the remediation plan for safety, "
             "completeness, and risk. Flag missing steps, destructive commands without safeguards, "

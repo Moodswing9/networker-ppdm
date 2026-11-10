@@ -1,10 +1,10 @@
-"""Generate automation scripts using Claude Opus 4.7."""
+"""Generate automation scripts using Claude Opus 5.5."""
 
 from __future__ import annotations
 
 import anthropic
 
-_MODEL = "claude-opus-4-7"
+from orchestrator.claude_models import OPUS, OPUS_FALLBACK, text_of
 
 _SYSTEM_PROMPT = (
     "You are an expert Dell EMC NetWorker and PowerProtect Data Manager (PPDM) "
@@ -18,16 +18,17 @@ _SYSTEM_PROMPT = (
 def generate_script(description: str) -> str:
     """Return a Python or bash script matching the given description.
 
-    Uses Claude Opus 4.7 with adaptive thinking for accurate data-protection
+    Uses Claude Opus 5.5 with adaptive thinking at high effort for accurate data-protection
     domain code generation. Set ANTHROPIC_API_KEY in your environment.
     """
     client = anthropic.Anthropic()
 
-    msg = client.messages.create(
-        model=_MODEL,
-        max_tokens=2048,
-        thinking={"type": "adaptive"},
+    msg = client.beta.messages.create(
+        model=OPUS,
+        max_tokens=16000,  # thinking and the script share it
+        output_config={"effort": "high"},
+        **OPUS_FALLBACK,
         system=_SYSTEM_PROMPT,
         messages=[{"role": "user", "content": description}],
     )
-    return next((b.text for b in msg.content if b.type == "text"), "")
+    return text_of(msg)
