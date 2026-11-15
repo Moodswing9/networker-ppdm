@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+# Least privilege: these jobs only read the repo.
+permissions:
+  contents: read
+
 jobs:
   validate:
     name: Validate Claude Code plugin
